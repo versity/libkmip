@@ -32,7 +32,7 @@ KMIP    = kmip
 OFILES  = kmip.o kmip_memset.o kmip_bio.o
 LOFILES = kmip.lo kmip_memset.lo kmip_bio.lo
 
-all: demos tests $(LIBS)
+all: checks demos tests $(LIBS)
 
 test: tests
 	$(SRCDIR)/tests
@@ -70,48 +70,78 @@ uninstall_html_docs:
 	rm -rf $(DESTDIR)$(PREFIX)/share/doc/$(KMIP)/html
 
 docs: html_docs
+
 html_docs:
 	cd $(SRCDIR)/docs && make html && cd -
+
+checks: server_check server_verify
+
+server_check: server_check.o $(OFILES)
+	$(CC) $(LDFLAGS) -o server_check $? $(LDLIBS)
+
+server_check.o: server_check.c kmip_memset.h kmip.h
+
+server_verify: server_verify.o $(OFILES)
+	$(CC) $(LDFLAGS) -o server_verify $? $(LDLIBS)
+
+server_verify.o: server_verify.c kmip_memset.h kmip.h
+
 demos: demo_create demo_get demo_destroy
+
 demo_get: demo_get.o $(OFILES)
 	$(CC) $(LDFLAGS) -o demo_get $? $(LDLIBS)
+
 demo_create: demo_create.o $(OFILES)
 	$(CC) $(LDFLAGS) -o demo_create $? $(LDLIBS)
+
 demo_destroy: demo_destroy.o $(OFILES)
 	$(CC) $(LDFLAGS) -o demo_destroy $? $(LDLIBS)
+
 tests: tests.o kmip.o kmip_memset.o
 	$(CC) $(LDFLAGS) -o tests tests.o kmip.o kmip_memset.o
 
 demo_get.o: demo_get.c kmip_memset.h kmip.h
+
 demo_create.o: demo_create.c kmip_memset.h kmip.h
+
 demo_destroy.o: demo_destroy.c kmip_memset.h kmip.h
+
 tests.o: tests.c kmip_memset.h kmip.h
+
 $(LIBNAME): $(LOFILES)
 	$(CC) $(CFLAGS) $(SOFLAGS) -o $@ $(LOFILES)
 $(ARCNAME): $(OFILES)
 	$(AR) $@ $(OFILES)
 
 kmip.o: kmip.c kmip.h kmip_memset.h
+
 kmip.lo: kmip.c kmip.h kmip_memset.h
 
 kmip_memset.o: kmip_memset.c kmip_memset.h
+
 kmip_memset.lo: kmip_memset.c kmip_memset.h
 
 kmip_bio.o: kmip_bio.c kmip_bio.h
+
 kmip_bio.lo: kmip_bio.c kmip_bio.h
 
 clean:
 	rm -f *.o *.lo
+
 clean_html_docs:
 	cd docs && make clean && cd ..
+
 cleanest:
-	rm -f demo_create demo_get demo_destroy tests *.o $(LOFILES) $(LIBS)
+	rm -f server_check server_verify demo_create demo_get demo_destroy tests *.o $(LOFILES) $(LIBS)
 	cd docs && make clean && cd ..
 
 .SUFFIXES: .c .o .lo .so
+
 .c.o:
 	$(CC) $(CFLAGS) -c $<
+
 .c.lo:
 	$(CC) $(CFLAGS) $(LOFLAGS) -c $< -o $@
+
 #.lo.so:
 #	$(CC) $(CFLAGS) $(SOFLAGS) -o $@ $?
