@@ -3996,7 +3996,7 @@ test_encode_key_value_with_attributes(TestTracker *tracker)
     key.value = value;
     key.size = ARRAY_LENGTH(value);
     
-    struct attribute attributes[2] = {0};
+    struct attribute attributes[2] = {{0}, {0}};
     for(int i = 0; i < 2; i++)
     {
         kmip_init_attribute(&attributes[i]);
@@ -4063,7 +4063,7 @@ test_decode_key_value_with_attributes(TestTracker *tracker)
     key.value = value;
     key.size = ARRAY_LENGTH(value);
     
-    struct attribute attributes[2] = {0};
+    struct attribute attributes[2] = {{0}, {0}};
     for(size_t i = 0; i < 2; i++)
     {
         kmip_init_attribute(&attributes[i]);
@@ -5556,7 +5556,7 @@ test_encode_create_request_payload(TestTracker *tracker)
     struct kmip ctx = {0};
     kmip_init(&ctx, observed, ARRAY_LENGTH(observed), KMIP_1_0);
     
-    struct attribute a[3] = {0};
+    struct attribute a[3] = {{0}, {0}, {0}};
     for(int i = 0; i < 3; i++)
     {
         kmip_init_attribute(&a[i]);
@@ -5632,7 +5632,7 @@ test_encode_create_request_payload_kmip_2_0(TestTracker *tracker)
     struct kmip ctx = {0};
     kmip_init(&ctx, observed, ARRAY_LENGTH(observed), KMIP_2_0);
     
-    Attribute a[3] = {0};
+    Attribute a[3] = {{0}, {0}, {0}};
     for(int i = 0; i < 3; i++)
     {
         kmip_init_attribute(&a[i]);
@@ -5725,7 +5725,7 @@ test_decode_create_request_payload(TestTracker *tracker)
     struct kmip ctx = {0};
     kmip_init(&ctx, encoding, ARRAY_LENGTH(encoding), KMIP_1_0);
     
-    struct attribute a[3] = {0};
+    struct attribute a[3] = {{0}, {0}, {0}};
     for(int i = 0; i < 3; i++)
     {
         kmip_init_attribute(&a[i]);
@@ -5802,7 +5802,7 @@ test_decode_create_request_payload_kmip_2_0(TestTracker *tracker)
     struct kmip ctx = {0};
     kmip_init(&ctx, encoding, ARRAY_LENGTH(encoding), KMIP_2_0);
     
-    Attribute a[3] = {0};
+    Attribute a[3] = {{0}, {0}, {0}};
     for(int i = 0; i < 3; i++)
     {
         kmip_init_attribute(&a[i]);
@@ -8828,7 +8828,7 @@ test_encode_template_attribute(TestTracker *tracker)
     n.value = &v;
     n.type = KMIP_NAME_UNINTERPRETED_TEXT_STRING;
     
-    struct attribute a[4] = {0};
+    struct attribute a[4] = {{0}, {0}, {0}, {0}};
     for(int i = 0; i < 4; i++)
     {
         kmip_init_attribute(&a[i]);
@@ -8929,7 +8929,7 @@ test_decode_template_attribute(TestTracker *tracker)
     n.value = &v;
     n.type = KMIP_NAME_UNINTERPRETED_TEXT_STRING;
     
-    struct attribute a[4] = {0};
+    struct attribute a[4] = {{0}, {0}, {0}, {0}};
     for(int i = 0; i < 4; i++)
     {
         kmip_init_attribute(&a[i]);
@@ -10776,7 +10776,7 @@ test_kmip_1_1_test_suite_3_1_1_0_a(TestTracker *tracker)
     rh.protocol_version = &pv;
     rh.batch_count = 1;
     
-    struct attribute a[3] = {0};
+    struct attribute a[3] = {{0}, {0}, {0}};
     for(int i = 0; i < 3; i++)
     {
         kmip_init_attribute(&a[i]);

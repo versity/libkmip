@@ -1150,7 +1150,9 @@ kmip_clear_errors(KMIP *ctx)
     
     for(size_t i = 0; i < ARRAY_LENGTH(ctx->errors); i++)
     {
-        ctx->errors[i] = (ErrorFrame){0};
+        // ctx->errors[i] = (ErrorFrame){0};
+        strcpy(ctx->errors[i].function, "");
+        ctx->errors[i].line = 0;
     }
     ctx->frame_index = ctx->errors;
     

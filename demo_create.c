@@ -76,8 +76,8 @@ use_low_level_api(const char *server_address,
     /* Set up the TLS connection to the KMIP server. */
     SSL_CTX *ctx = NULL;
     SSL *ssl = NULL;
-    OPENSSL_init_ssl(0, NULL);
-    ctx = SSL_CTX_new(TLS_client_method());
+    SSL_library_init();
+    ctx = SSL_CTX_new(SSLv23_client_method());
     
     printf("\n");
     printf("Loading the client certificate: %s\n", client_certificate);
@@ -151,7 +151,7 @@ use_low_level_api(const char *server_address,
     kmip_set_buffer(&kmip_context, encoding, buffer_total_size);
     
     /* Build the request message. */
-    Attribute a[3] = {0};
+    Attribute a[3] = {{0}, {0}, {0}};
     for(int i = 0; i < 3; i++)
         kmip_init_attribute(&a[i]);
     
