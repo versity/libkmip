@@ -1,147 +1,343 @@
-##
-## Makefile for libkmip
-##
-.POSIX:
-.SUFFIXES:
+## 
+## Build libkmip for Versity development
+## 
 
-SRCDIR = .
-BINDIR = $(SRCDIR)/bin
 
-MAJOR    = 0
-MINOR    = 2
-MICRO    = 0
-VERSION  = $(MAJOR).$(MINOR)
-ARCNAME  = libkmip.a
-LINKNAME = libkmip.so
-SONAME   = $(LINKNAME).$(MAJOR)
-LIBNAME  = $(LINKNAME).$(VERSION)
-LIBS     = $(LIBNAME) $(ARCNAME)
+# --------------------------------------------------------------------------
+# Set libkmip version number using git tags and optional developer PKG_PATCH
+# environment variable
 
-CC      = cc
-#CFLAGS = -std=c11 -pedantic -g3 -Og -Wall -Wextra
-CFLAGS  = -std=c11 -pedantic -g3 -Wall -Wextra
-LOFLAGS = -fPIC
-SOFLAGS = -shared -Wl,-soname,$(SONAME)
-LDFLAGS = -L/usr/local/lib
-LDLIBS  = -lssl -lcrypto
-AR      = ar csrv
-DESTDIR = 
-PREFIX  = /usr/local
-KMIP    = kmip
+GIT-VERSION-FILE: .FORCE
+	./GIT-VERSION-GEN
+-include GIT-VERSION-FILE
 
-OFILES  = kmip.o kmip_memset.o kmip_bio.o
-LOFILES = kmip.lo kmip_memset.lo kmip_bio.lo
+LIBKMIP_VER_MAJOR ?= $(wordlist 1,1, $(subst -, ,$(subst ., ,$(VERSION))))
+LIBKMIP_VER_MINOR ?= $(wordlist 2,2, $(subst -, ,$(subst ., ,$(VERSION))))
+LIBKMIP_VER := $(LIBKMIP_VER_MAJOR).$(LIBKMIP_VER_MINOR)
 
-all: checks demos tests $(LIBS)
 
-test: tests
-	$(SRCDIR)/tests
+# --------------------------------------------------------------------------
+# BUILD directory
 
-install: all
-	mkdir -p $(DESTDIR)$(PREFIX)/bin/$(KMIP)
-	mkdir -p $(DESTDIR)$(PREFIX)/include/$(KMIP)
-	mkdir -p $(DESTDIR)$(PREFIX)/lib
-	mkdir -p $(DESTDIR)$(PREFIX)/src/$(KMIP)
-	mkdir -p $(DESTDIR)$(PREFIX)/share/doc/$(KMIP)/src
-	cp demo_create $(DESTDIR)$(PREFIX)/bin/$(KMIP)
-	cp demo_get $(DESTDIR)$(PREFIX)/bin/$(KMIP)
-	cp demo_destroy $(DESTDIR)$(PREFIX)/bin/$(KMIP)
-	cp tests $(DESTDIR)$(PREFIX)/bin/$(KMIP)
-	cp -r $(SRCDIR)/docs/source/. $(DESTDIR)$(PREFIX)/share/doc/$(KMIP)/src
-	cp $(SRCDIR)/*.c $(DESTDIR)$(PREFIX)/src/$(KMIP)
-	cp $(SRCDIR)/*.h $(DESTDIR)$(PREFIX)/include/$(KMIP)
-	cp $(SRCDIR)/$(LIBNAME) $(DESTDIR)$(PREFIX)/lib
-	cp $(SRCDIR)/$(ARCNAME) $(DESTDIR)$(PREFIX)/lib
-	cd $(DESTDIR)$(PREFIX)/lib && ln -s $(LIBNAME) $(LINKNAME) && cd -
+ifndef BUILD
+    ifdef DEBUG
+        BUILD := build-debug
+    else
+        BUILD := build
+    endif
+endif
 
-install_html_docs: html_docs
-	mkdir -p $(DESTDIR)$(PREFIX)/share/doc/$(KMIP)/html
-	cp -r $(SRCDIR)/docs/build/html/. $(DESTDIR)$(PREFIX)/share/doc/$(KMIP)/html
+$(BUILD):
+	mkdir -p $(BUILD)
 
+# --------------------------------------------------------------------------
+# DESTDIR directory
+
+ifndef DESTDIR
+    DESTDIR := /usr
+endif
+
+# --------------------------------------------------------------------------
+# LIBDIR directory
+
+ifndef LIBDIR
+    LIBDIR := $(DESTDIR)/lib
+endif
+
+# --------------------------------------------------------------------------
+# Library dependencies for libkmip
+
+ifndef OPENSSL_LIBS
+    OPENSSL_LIBS := -lssl -lcrypto
+endif
+
+
+# --------------------------------------------------------------------------
+# These CFLAGS assume a GNU compiler.  For other compilers, write a script
+# which converts these arguments into their equivalent for that particular
+# compiler.
+
+CFLAGS = -std=c11 \
+         -pedantic \
+         -Wall \
+         -Wextra \
+         -D__STRICT_ANSI__ \
+         -D_ISOC99_SOURCE \
+         -D_POSIX_C_SOURCE=200112L
+
+ifdef DEBUG
+    CFLAGS += -Og -g3
+else
+    CFLAGS += -O3
+endif
+
+LDFLAGS = $(OPENSSL_LIBS)
+
+AR      = ar
+ARFLAGS = csrv
+
+
+# --------------------------------------------------------------------------
+# Default targets are everything
+
+.PHONY: all
+all: exported tests demos
+
+
+# --------------------------------------------------------------------------
+# Exported targets are the library and utility programs
+
+.PHONY: exported
+exported: libkmip kmip-get headers
+
+
+# --------------------------------------------------------------------------
+# Install target
+
+.PHONY: install
+install: exported
+	@echo Installing executable: $(DESTDIR)/bin/kmip-get
+	install -Dps -m u+rwx,go+rx \
+	    $(BUILD)/bin/kmip-get \
+	    $(DESTDIR)/bin/kmip-get
+	@echo Installing shared library: $(LIBDIR)/libkmip.so.$(LIBKMIP_VER)
+	install -Dps -m u+rw,go+r \
+	    $(BUILD)/lib/libkmip.so.$(LIBKMIP_VER_MAJOR) \
+	    $(LIBDIR)/libkmip.so.$(LIBKMIP_VER)
+	@echo Linking shared library: $(LIBDIR)/libkmip.so.$(LIBKMIP_VER_MAJOR)
+	ln -sf libkmip.so.$(LIBKMIP_VER) \
+	    $(LIBDIR)/libkmip.so.$(LIBKMIP_VER_MAJOR)
+	@echo Linking shared library: $(LIBDIR)/libkmip.so
+	ln -sf libkmip.so.$(LIBKMIP_VER_MAJOR) $(LIBDIR)/libkmip.so
+	@echo Installing static library: $(LIBDIR)/libkmip.a
+	install -Dp -m u+rw,go+r $(BUILD)/lib/libkmip.a \
+	    $(LIBDIR)/libkmip.a
+	@echo Installing header: $(DESTDIR)/include/kmip.h
+	install -Dp -m u+rw,go+r $(BUILD)/include/kmip.h \
+	    $(DESTDIR)/include/kmip.h
+	@echo Installing header: $(DESTDIR)/include/kmip_bio.h
+	install -Dp -m u+rw,go+r $(BUILD)/include/kmip_bio.h \
+	    $(DESTDIR)/include/kmip_bio.h
+	@echo Installing header: $(DESTDIR)/include/kmip_memset.h
+	install -Dp -m u+rw,go+r $(BUILD)/include/kmip_memset.h \
+	    $(DESTDIR)/include/kmip_memset.h
+
+
+# --------------------------------------------------------------------------
+# Uninstall target
+
+.PHONY: uninstall
 uninstall:
-	rm -rf $(DESTDIR)$(PREFIX)/bin/$(KMIP)
-	rm -rf $(DESTDIR)$(PREFIX)/include/$(KMIP)
-	rm -rf $(DESTDIR)$(PREFIX)/src/$(KMIP)
-	rm -rf $(DESTDIR)$(PREFIX)/share/doc/$(KMIP)
-	rm -r $(DESTDIR)$(PREFIX)/lib/$(LINKNAME)*
-	rm -r $(DESTDIR)$(PREFIX)/lib/$(ARCNAME)
+	@echo Uninstalled files: ...
+	rm -f \
+	    $(DESTDIR)/bin/kmip-get \
+	    $(DESTDIR)/include/kmip.h \
+	    $(DESTDIR)/include/kmip_bio.h \
+	    $(DESTDIR)/include/kmip_memset.h \
+	    $(DESTDIR)/lib/libkmip.a \
+	    $(DESTDIR)/lib/libkmip.so \
+	    $(DESTDIR)/lib/libkmip.so.$(LIBKMIP_VER_MAJOR) \
+	    $(DESTDIR)/lib/libkmip.so.$(LIBKMIP_VER)
 
-uninstall_html_docs:
-	rm -rf $(DESTDIR)$(PREFIX)/share/doc/$(KMIP)/html
 
-docs: html_docs
+# --------------------------------------------------------------------------
+# Compile target patterns
 
-html_docs:
-	cd $(SRCDIR)/docs && make html && cd -
+$(BUILD)/obj/%.o: %.c
+	@echo Compiling object: $@
+	@mkdir -p $(dir $(BUILD)/dep/$<)
+	@$(CC) $(CFLAGS) -M -MG -MQ $@ -o $(BUILD)/dep/$(<:%.c=%.d) -c $<
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -o $@ -c $<
 
-checks: server_check server_verify
+$(BUILD)/obj/%.lo: %.c
+	@echo Compiling dynamic object: $@
+	@mkdir -p $(dir $(BUILD)/dep/$<)
+	@$(CC) $(CFLAGS) -M -MG -MQ $@ -o $(BUILD)/dep/$(<:%.c=%.dd) -c $<
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -fpic -fPIC -o $@ -c $< 
 
-server_check: server_check.o $(OFILES)
-	$(CC) $(LDFLAGS) -o server_check $? $(LDLIBS)
+$(BUILD)/include/%.h: %.h
+	@echo Linking header: $@
+	@mkdir -p $(dir $@)
+	ln -sf $(abspath $<) $@
 
-server_check.o: server_check.c kmip_memset.h kmip.h
 
-server_verify: server_verify.o $(OFILES)
-	$(CC) $(LDFLAGS) -o server_verify $? $(LDLIBS)
+# --------------------------------------------------------------------------
+# libkmip library targets
 
-server_verify.o: server_verify.c kmip_memset.h kmip.h
+LIBKMIP_SHARED = $(BUILD)/lib/libkmip.so.$(LIBKMIP_VER_MAJOR)
+LIBKMIP_STATIC = $(BUILD)/lib/libkmip.a
 
-demos: demo_create demo_get demo_destroy
+.PHONY: libkmip
+libkmip: $(LIBKMIP_SHARED) $(LIBKMIP_STATIC)
 
-demo_get: demo_get.o $(OFILES)
-	$(CC) $(LDFLAGS) -o demo_get $? $(LDLIBS)
+LIBKMIP_SOURCES := kmip.c kmip_bio.c kmip_memset.c
 
-demo_create: demo_create.o $(OFILES)
-	$(CC) $(LDFLAGS) -o demo_create $? $(LDLIBS)
+$(LIBKMIP_SHARED): $(LIBKMIP_SOURCES:%.c=$(BUILD)/obj/%.lo)
+	@echo Building shared library: $@
+	@mkdir -p $(dir $@)
+	$(CC) -shared -Wl,-soname,libkmip.so.$(LIBKMIP_VER_MAJOR) -o $@ $^ $(LDFLAGS)
 
-demo_destroy: demo_destroy.o $(OFILES)
-	$(CC) $(LDFLAGS) -o demo_destroy $? $(LDLIBS)
+$(LIBKMIP_STATIC): $(LIBKMIP_SOURCES:%.c=$(BUILD)/obj/%.o)
+	@echo Building static library: $@
+	@mkdir -p $(dir $@)
+	$(AR) $(ARFLAGS) $@ $^
 
-tests: tests.o kmip.o kmip_memset.o
-	$(CC) $(LDFLAGS) -o tests tests.o kmip.o kmip_memset.o
 
-demo_get.o: demo_get.c kmip_memset.h kmip.h
+# --------------------------------------------------------------------------
+# KMIP server validation target
 
-demo_create.o: demo_create.c kmip_memset.h kmip.h
+.PHONY: kmip-get
+kmip-get: $(BUILD)/bin/kmip-get
 
-demo_destroy.o: demo_destroy.c kmip_memset.h kmip.h
+$(BUILD)/bin/kmip-get: $(BUILD)/obj/kmip-get.o $(LIBKMIP_STATIC)
+	@echo Building executable: $@
+	@mkdir -p $(dir $@)
+	$(CC) -o $@ $^ $(LDFLAGS)
 
-tests.o: tests.c kmip_memset.h kmip.h
 
-$(LIBNAME): $(LOFILES)
-	$(CC) $(CFLAGS) $(SOFLAGS) -o $@ $(LOFILES)
-$(ARCNAME): $(OFILES)
-	$(AR) $@ $(OFILES)
+# --------------------------------------------------------------------------
+# libkmip header targets
 
-kmip.o: kmip.c kmip.h kmip_memset.h
+.PHONY: headers
+headers: $(BUILD)/include/kmip.h $(BUILD)/include/kmip_bio.h $(BUILD)/include/kmip_memset.h
 
-kmip.lo: kmip.c kmip.h kmip_memset.h
 
-kmip_memset.o: kmip_memset.c kmip_memset.h
+# --------------------------------------------------------------------------
+# Test targets
 
-kmip_memset.lo: kmip_memset.c kmip_memset.h
+.PHONY: tests
+tests: $(BUILD)/bin/tests
 
-kmip_bio.o: kmip_bio.c kmip_bio.h
+$(BUILD)/bin/tests: $(BUILD)/obj/tests.o $(LIBKMIP_STATIC)
+	@echo Building executable: $@
+	@mkdir -p $(dir $@)
+	$(CC) -o $@ $^ $(LDFLAGS)
 
-kmip_bio.lo: kmip_bio.c kmip_bio.h
 
+# --------------------------------------------------------------------------
+# Demonstration targets
+
+.PHONY: demos
+demos: $(BUILD)/bin/demo_create $(BUILD)/bin/demo_get $(BUILD)/bin/demo_destroy
+
+$(BUILD)/bin/demo_create: $(BUILD)/obj/demo_create.o $(LIBKMIP_STATIC)
+	@echo Building executable: $@
+	@mkdir -p $(dir $@)
+	$(CC) -o $@ $^ $(LDFLAGS)
+
+$(BUILD)/bin/demo_get: $(BUILD)/obj/demo_get.o $(LIBKMIP_STATIC)
+	@echo Building executable: $@
+	@mkdir -p $(dir $@)
+	$(CC) -o $@ $^ $(LDFLAGS)
+
+$(BUILD)/bin/demo_destroy: $(BUILD)/obj/demo_destroy.o $(LIBKMIP_STATIC)
+	@echo Building executable: $@
+	@mkdir -p $(dir $@)
+	$(CC) -o $@ $^ $(LDFLAGS)
+
+
+# --------------------------------------------------------------------------
+# Clean target
+
+.PHONY: clean
 clean:
-	rm -f *.o *.lo
+	@echo Cleaning: $(BUILD)
+	@echo rm -rf $(BUILD)
 
-clean_html_docs:
-	cd docs && make clean && cd ..
+.PHONY: distclean
+distclean:
+	@echo Cleaning: $(BUILD)
+	rm -rf $(BUILD)
 
-cleanest:
-	rm -f server_check server_verify demo_create demo_get demo_destroy tests *.o $(LOFILES) $(LIBS)
-	cd docs && make clean && cd ..
 
-.SUFFIXES: .c .o .lo .so
+# --------------------------------------------------------------------------
+# Clean dependencies target
 
-.c.o:
-	$(CC) $(CFLAGS) -c $<
+.PHONY: cleandeps
+cleandeps:
+	@echo Cleaning dependencies: $(BUILD)/dep
+	rm -rf $(BUILD)/dep
 
-.c.lo:
-	$(CC) $(CFLAGS) $(LOFLAGS) -c $< -o $@
 
-#.lo.so:
-#	$(CC) $(CFLAGS) $(SOFLAGS) -o $@ $?
+# --------------------------------------------------------------------------
+# Dependencies
+
+ALL_SOURCES := $(LIBKMIP_SOURCES) kmip-get
+
+$(foreach i, $(ALL_SOURCES), $(eval -include $(BUILD)/dep/$(i:%.c=%.d)))
+$(foreach i, $(ALL_SOURCES), $(eval -include $(BUILD)/dep/$(i:%.c=%.dd)))
+
+
+# --------------------------------------------------------------------------
+# tar package target
+
+GIT_TARNAME = libkmip-$(FULL_VERSION)
+GIT_TARPATH = $(BUILD)/$(GIT_TARNAME)
+
+dist: $(BUILD) libkmip.spec
+	git archive --format=tar --prefix=$(GIT_TARNAME)/ HEAD^{tree} > $(GIT_TARPATH).tar
+	mkdir -p $(GIT_TARNAME)
+	cp GIT-VERSION-FILE $(GIT_TARNAME)
+	cp $(BUILD)/libkmip.spec $(GIT_TARNAME)
+	tar -rf $(GIT_TARPATH).tar $(GIT_TARNAME)/GIT-VERSION-FILE $(GIT_TARNAME)/libkmip.spec
+	rm -r $(GIT_TARNAME)
+	gzip -f -9 $(GIT_TARPATH).tar
+
+
+# --------------------------------------------------------------------------
+# Redhat RPM target --- RPM releases can't have "-"
+
+RPM_RELEASE := $(shell echo $(RELEASE) | tr '-' '.')
+
+%.spec: %.spec.in .FORCE $(BUILD)
+	sed -e 's/@@VERSION@@/$(VERSION)/g' \
+	    -e 's/@@TAR_NAME@@/$(GIT_TARNAME)/g' \
+	    -e 's/@@RELEASE@@/$(RPM_RELEASE)/g' < $< > $@+
+	mv $@+ $(BUILD)/$@
+
+RPM_DIR = $(BUILD)/rpmbuild
+export RESULT_DIR = $(PWD)/pkg-linux/libkmip-$(FULL_VERSION)
+
+rpm: dist
+	@mkdir -p $(RPM_DIR)
+	env RPM_DIR=$(RPM_DIR) bash ./pkg-linux/mock_rpmbuild.sh $(GIT_TARPATH).tar.gz $(BUILD)/libkmip.spec
+
+relrpm: dist
+	@mkdir -p $(RPM_DIR)
+	env RPM_DIR=$(RPM_DIR) REL_BUILD="yes" bash ./pkg-linux/mock_rpmbuild.sh $(GIT_TARPATH).tar.gz $(BUILD)/libkmip.spec
+
+devrpm: dist
+	@mkdir -p $(RPM_DIR)
+	env RPM_DIR=$(RPM_DIR) bash ./pkg-linux/rpmbuild.sh $(GIT_TARPATH).tar.gz $(BUILD)/libkmip.spec
+
+
+# --------------------------------------------------------------------------
+# Print macros to help in debugging
+
+macros:
+	@echo "BUILD:             $(BUILD)"
+	@echo "DESTDIR:           $(DESTDIR)"
+	@echo "LIBDIR:            $(LIBDIR)"
+	@echo ""
+	@echo "GIT_TARNAME:       $(GIT_TARNAME)"
+	@echo "GIT_TARPATH:       $(GIT_TARPATH)"
+	@echo ""
+	@echo "LIBKMIP_HEADERS:   $(LIBKMIP_HEADERS)"
+	@echo "LIBKMIP_SOURCES:   $(LIBKMIP_SOURCES)"
+	@echo "LIBKMIP_SHARED:    $(LIBKMIP_SHARED)"
+	@echo "LIBKMIP_STATIC:    $(LIBKMIP_STATIC)"
+	@echo ""
+	@echo "RPM_DIR:           $(RPM_DIR)"
+	@echo "RPM_RELEASE:       $(RPM_RELEASE)"
+	@echo ""
+	@echo "VERSION:           $(VERSION)"
+	@echo "FULL_VERSION:      $(FULL_VERSION)"
+	@echo "LIBKMIP_VER:       $(LIBKMIP_VER)"
+	@echo "LIBKMIP_VER_MAJOR: $(LIBKMIP_VER_MAJOR)"
+	@echo "LIBKMIP_VER_MINOR: $(LIBKMIP_VER_MINOR)"
+
+
+.PHONY: .FORCE
+.FORCE:

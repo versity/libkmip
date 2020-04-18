@@ -1285,6 +1285,16 @@ void kmip_init_response_header(ResponseHeader *);
 void kmip_init_request_batch_item(RequestBatchItem *);
 
 /*
+Error decoding functions
+*/
+
+const char *kmip_error_string(int);
+const char *kmip_result_status_enum(enum result_status);
+const char *kmip_result_reason_enum(enum result_reason);
+void kmip_stack_trace(KMIP *, void (*)(const char *, void *), void *);
+void kmip_dump_buffer(void *, int, void (*)(const char *, void *), void *);
+
+/*
 Printing Functions
 */
 

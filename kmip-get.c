@@ -27,6 +27,12 @@
                                 __VA_ARGS__); } while (0)
 
 
+static inline int min(int x, int y)
+{
+    return x < y ? x : y;
+}
+
+
 void usage(const char *program)
 {
     fprintf(stderr, "Usage: %s [flag value | flag] ...\n\n", program);
@@ -43,24 +49,61 @@ void usage(const char *program)
 }
 
 
-void *check_calloc(void *state, size_t count, size_t size)
+static void *_calloc(void *state, size_t count, size_t size)
 {
     debug_printf("state=%p, count=%zu, size=%zu\n", state, count, size);
     return calloc(count, size);
 }
 
 
-void *check_realloc(void *state, void *address, size_t size)
+static void *_realloc(void *state, void *address, size_t size)
 {
     debug_printf("state=%p, address=%p, size=%zu\n", state, address, size);
     return realloc(address, size);
 }
 
 
-void check_free(void *state, void *address)
+static void _free(void *state, void *address)
 {
     debug_printf("state=%p, address=%p\n", state, address);
     free(address);
+}
+
+
+static int print_OpenSSL_errors(const char *string, size_t length, void *user)
+{
+
+    const char *tag = (user != NULL) ? (const char *)user : "";
+    char buffer[256];
+    size_t count = min(length, sizeof (buffer) - 1);
+
+    strncpy(buffer, string, count);
+    buffer[count] = '\0';
+
+    fprintf(stderr, "%s%s", tag, buffer);
+
+    return 1;
+
+}
+
+
+static void print_libkmip_stack(const char *string, void *user)
+{
+
+    const char *tag = (user != NULL) ? (const char *)user : "";
+
+    fprintf(stderr, "%s%s", tag, string);
+
+}
+
+
+static void print_libkmip_buffer(const char *string, void *user)
+{
+
+    const char *tag = (user != NULL) ? (const char *)user : "";
+
+    fprintf(stdout, "%s%s\n", tag, string);
+
 }
 
 
@@ -83,7 +126,7 @@ int use_mid_level_api(char *server_address,
     fprintf(stdout, "Loading the client certificate: %s\n", client_certificate);
     if (SSL_CTX_use_certificate_file(ctx, client_certificate, SSL_FILETYPE_PEM) != 1) {
         fprintf(stderr, "Loading the client certificate failed\n");
-        ERR_print_errors_fp(stderr);
+        ERR_print_errors_cb(print_OpenSSL_errors, NULL);
         SSL_CTX_free(ctx);
         return -1;
     }
@@ -91,7 +134,7 @@ int use_mid_level_api(char *server_address,
     fprintf(stdout, "Loading the client key: %s\n", client_key);
     if (SSL_CTX_use_PrivateKey_file(ctx, client_key, SSL_FILETYPE_PEM) != 1) {
         fprintf(stderr, "Loading the client key failed\n");
-        ERR_print_errors_fp(stderr);
+        ERR_print_errors_cb(print_OpenSSL_errors, NULL);
         SSL_CTX_free(ctx);
         return -1;
     }
@@ -99,7 +142,7 @@ int use_mid_level_api(char *server_address,
     fprintf(stdout, "Loading the CA certificate: %s\n", ca_certificate);
     if (SSL_CTX_load_verify_locations(ctx, ca_certificate, NULL) != 1) {
         fprintf(stderr, "Loading the CA file failed\n");
-        ERR_print_errors_fp(stderr);
+        ERR_print_errors_cb(print_OpenSSL_errors, NULL);
         SSL_CTX_free(ctx);
         return -1;
     }
@@ -119,13 +162,11 @@ int use_mid_level_api(char *server_address,
 
     if (BIO_do_connect(bio) != 1) {
         fprintf(stderr, "BIO_do_connect failed\n");
-        ERR_print_errors_fp(stderr);
+        ERR_print_errors_cb(print_OpenSSL_errors, NULL);
         BIO_free_all(bio);
         SSL_CTX_free(ctx);
         return -1;
     }
-
-    fprintf(stdout, "\n");
 
     char *key = NULL;
     int key_size = 0;
@@ -133,9 +174,9 @@ int use_mid_level_api(char *server_address,
 
     KMIP kmip_context = {0};
 
-    kmip_context.calloc_func = &check_calloc;
-    kmip_context.realloc_func = &check_realloc;
-    kmip_context.free_func = &check_free;
+    kmip_context.calloc_func = &_calloc;
+    kmip_context.realloc_func = &_realloc;
+    kmip_context.free_func = &_free;
 
     kmip_init(&kmip_context, NULL, 0, KMIP_1_0);
 
@@ -174,25 +215,24 @@ int use_mid_level_api(char *server_address,
 
     fprintf(stdout, "\n");
     if (result < 0) {
-        fprintf(stdout, "An error occurred while creating the symmetric key.");
+        fprintf(stdout, "An error occurred while getting the symmetric key.");
         fprintf(stdout, "Error Code: %d\n", result);
-        fprintf(stdout, "Error Name: ");
-        kmip_print_error_string(result);
+        fprintf(stdout, "Error Name: %s", kmip_error_string(result));
         fprintf(stdout, "\n");
         fprintf(stdout, "Context Error: %s\n", kmip_context.error_message);
         fprintf(stdout, "Stack trace:\n");
-        kmip_print_stack_trace(&kmip_context);
+        kmip_stack_trace(&kmip_context, print_libkmip_stack, NULL);
     } else if (result >= 0) {
+
         fprintf(stdout, "The KMIP operation was executed with no errors.\n");
-        fprintf(stdout, "Result: ");
-        kmip_print_result_status_enum(result);
-        fprintf(stdout, " (%d)\n", result);
+        fprintf(stdout, "Result: %s (%d)\n", kmip_result_status_enum(result), result);
 
         if (result == KMIP_STATUS_SUCCESS) {
+            const char *padding = "               ";
             fprintf(stdout, "Symmetric Key ID: %s\n", id);
             fprintf(stdout, "Symmetric Key Size: %d bits\n", key_size * 8);
             fprintf(stdout, "Symmetric Key:");
-            kmip_print_buffer(key, key_size);
+            kmip_dump_buffer(key, key_size, print_libkmip_buffer, (void *)padding);
             fprintf(stdout, "\n");
         }
 
