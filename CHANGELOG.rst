@@ -2,6 +2,22 @@
 Changelog
 =========
 
+.. _v0.2.1: https://github.com/versity/libkmip.git
+
+0.2.1 - April 29, 2020
+~~~~~~~~~~~~~~~~~~~~~~
+
+* Support Versity Development
+  - Add support for creation of RPM pagakes under 'mock'.
+  - Add additional functions to libkmip that allow information
+    from the context to made available for diagnositc purposes.
+  - Additional program, kmip-get, for use at customer sites to
+    verify that the 'libkmip' library is compatible with their
+    KMIP server.
+  - Changes to support CentOS 7
+    + Support for OpenSSL 1.0
+    + Issues with gcc not properly handling C11 {0} initializer.
+
 .. _v0.2:
 
 0.2 - July 12, 2019
