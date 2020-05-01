@@ -4,7 +4,7 @@ Changelog
 
 .. _v0.2.1: https://github.com/versity/libkmip.git
 
-0.2.1 - April 29, 2020
+0.2.1 - May 1, 2020
 ~~~~~~~~~~~~~~~~~~~~~~
 
 * Support Versity Development
@@ -17,6 +17,9 @@ Changelog
   - Changes to support CentOS 7
     + Support for OpenSSL 1.0
     + Issues with gcc not properly handling C11 {0} initializer.
+  - Changes to support CentOS 6
+    + Provide support by providing dummy functions that provide
+      error responses for 'kmip_*' calls used by VSM.
 
 .. _v0.2:
 

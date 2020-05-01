@@ -4,6 +4,24 @@
 
 
 # --------------------------------------------------------------------------
+# Determine if the build operating system is supported
+
+FULL_RELEASE = $(shell /bin/cat /etc/redhat-release | \
+                       /bin/sed -e 's/^CentOS.*release \([678].[0-9][0-9]*\).*/\1/')
+MAJOR_RELEASE = $(shell echo $(FULL_RELEASE) | /bin/cut -d "." -f 1)
+
+ifeq ($(MAJOR_RELEASE), 8)
+    SUPPORTED_RELEASE = 1
+else ifeq ($(MAJOR_RELEASE), 7)
+    SUPPORTED_RELEASE = 1
+else ifeq ($(MAJOR_RELEASE), 6)
+    SUPPORTED_RELEASE = 0
+else
+    $(error Unsupported release: $(FULL_RELEASE))
+endif
+
+
+# --------------------------------------------------------------------------
 # Set libkmip version number using git tags and optional developer PKG_PATCH
 # environment variable
 
@@ -57,13 +75,17 @@ endif
 # which converts these arguments into their equivalent for that particular
 # compiler.
 
-CFLAGS = -std=c11 \
+CFLAGS = \
          -pedantic \
          -Wall \
          -Wextra \
          -D__STRICT_ANSI__ \
          -D_ISOC99_SOURCE \
          -D_POSIX_C_SOURCE=200112L
+
+ifeq ($(SUPPORTED_RELEASE), 1)
+CFLAGS += -std=c11
+endif
 
 ifdef DEBUG
     CFLAGS += -Og -g3
@@ -88,7 +110,7 @@ all: exported tests demos
 # Exported targets are the library and utility programs
 
 .PHONY: exported
-exported: libkmip kmip-get headers
+exported: libkmip headers kmip-get
 
 
 # --------------------------------------------------------------------------
@@ -166,13 +188,17 @@ $(BUILD)/include/%.h: %.h
 # --------------------------------------------------------------------------
 # libkmip library targets
 
+ifeq ($(SUPPORTTED_RELEASE), 1)
+LIBKMIP_SOURCES := kmip.c kmip_bio.c kmip_memset.c
+else
+LIBKMIP_SOURCES := kmip_dummy.c
+endif
+
 LIBKMIP_SHARED = $(BUILD)/lib/libkmip.so.$(LIBKMIP_VER_MAJOR)
 LIBKMIP_STATIC = $(BUILD)/lib/libkmip.a
 
 .PHONY: libkmip
 libkmip: $(LIBKMIP_SHARED) $(LIBKMIP_STATIC)
-
-LIBKMIP_SOURCES := kmip.c kmip_bio.c kmip_memset.c
 
 $(LIBKMIP_SHARED): $(LIBKMIP_SOURCES:%.c=$(BUILD)/obj/%.lo)
 	@echo Building shared library: $@
@@ -187,6 +213,8 @@ $(LIBKMIP_STATIC): $(LIBKMIP_SOURCES:%.c=$(BUILD)/obj/%.o)
 
 # --------------------------------------------------------------------------
 # KMIP server validation target
+
+KMIPGET_SOURCES := kmip-get.c
 
 .PHONY: kmip-get
 kmip-get: $(BUILD)/bin/kmip-get
@@ -244,7 +272,7 @@ $(BUILD)/bin/demo_destroy: $(BUILD)/obj/demo_destroy.o $(LIBKMIP_STATIC)
 .PHONY: clean
 clean:
 	@echo Cleaning: $(BUILD)
-	@echo rm -rf $(BUILD)
+	rm -rf $(BUILD)
 
 .PHONY: distclean
 distclean:
@@ -264,7 +292,7 @@ cleandeps:
 # --------------------------------------------------------------------------
 # Dependencies
 
-ALL_SOURCES := $(LIBKMIP_SOURCES) kmip-get
+ALL_SOURCES := $(LIBKMIP_SOURCES) $(KMIPGET_SOURCES)
 
 $(foreach i, $(ALL_SOURCES), $(eval -include $(BUILD)/dep/$(i:%.c=%.d)))
 $(foreach i, $(ALL_SOURCES), $(eval -include $(BUILD)/dep/$(i:%.c=%.dd)))
@@ -320,6 +348,10 @@ macros:
 	@echo "BUILD:             $(BUILD)"
 	@echo "DESTDIR:           $(DESTDIR)"
 	@echo "LIBDIR:            $(LIBDIR)"
+	@echo ""
+	@echo "FULL_RELEASE:      $(FULL_RELEASE)"
+	@echo "MAJOR_RELEASE:     $(MAJOR_RELEASE)"
+	@echo "SUPPORTED_RELEASE: $(SUPPORTED_RELEASE)"
 	@echo ""
 	@echo "GIT_TARNAME:       $(GIT_TARNAME)"
 	@echo "GIT_TARPATH:       $(GIT_TARPATH)"
