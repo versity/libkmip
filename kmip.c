@@ -1844,7 +1844,9 @@ static const char *error_strings[] = {
     "KMIP_MALFORMED_RESPONSE",
     "KMIP_OBJECT_MISMATCH",
     "KMIP_ARG_INVALID",
-    "KMIP_ERROR_BUFFER_UNDERFULL"
+    "KMIP_ERROR_BUFFER_UNDERFULL",
+    "KMIP_INVALID_ENCODING",
+    "KMIP_INVALID_FIELD"
 };
 
 #define number_elements(x) ((int)(sizeof (x)) / (int)(sizeof (x[0])))
@@ -1855,9 +1857,9 @@ kmip_error_string(int value)
 
     const char *error_string = NULL;
 
-    value = (value >= 0) ? value : -value;
+    value = (value < 0) ? -value : value;
 
-    if (value < number_elements(error_string)) {
+    if (value < number_elements(error_strings)) {
         error_string = error_strings[value];
     } else {
         error_string = "Unrecognized Error Code";

@@ -7,7 +7,7 @@
 # Determine if the build operating system is supported
 
 FULL_RELEASE = $(shell /bin/cat /etc/redhat-release | \
-                       /bin/sed -e 's/^CentOS.*release \([678].[0-9][0-9]*\).*/\1/')
+                       /bin/sed -e 's/^.* release \([.0-9]\+\) .*/\1/')
 MAJOR_RELEASE = $(shell echo $(FULL_RELEASE) | /bin/cut -d "." -f 1)
 
 ifeq ($(MAJOR_RELEASE), 8)
@@ -16,6 +16,10 @@ else ifeq ($(MAJOR_RELEASE), 7)
     SUPPORTED_RELEASE = 1
 else ifeq ($(MAJOR_RELEASE), 6)
     SUPPORTED_RELEASE = 0
+else ifeq ($(MAJOR_RELEASE), 31)
+    SUPPORTED_RELEASE = 1
+else ifeq ($(MAJOR_RELEASE), 32)
+    SUPPORTED_RELEASE = 1
 else
     $(error Unsupported release: $(FULL_RELEASE))
 endif
@@ -188,7 +192,7 @@ $(BUILD)/include/%.h: %.h
 # --------------------------------------------------------------------------
 # libkmip library targets
 
-ifeq ($(SUPPORTTED_RELEASE), 1)
+ifeq ($(SUPPORTED_RELEASE), 1)
 LIBKMIP_SOURCES := kmip.c kmip_bio.c kmip_memset.c
 else
 LIBKMIP_SOURCES := kmip_dummy.c
@@ -228,8 +232,10 @@ $(BUILD)/bin/kmip-get: $(BUILD)/obj/kmip-get.o $(LIBKMIP_STATIC)
 # --------------------------------------------------------------------------
 # libkmip header targets
 
+LIBKMIP_HEADERS = kmip.h kmip_bio.h kmip_memset.h
+
 .PHONY: headers
-headers: $(BUILD)/include/kmip.h $(BUILD)/include/kmip_bio.h $(BUILD)/include/kmip_memset.h
+headers: $(LIBKMIP_HEADERS:%.h=$(BUILD)/include/%.h)
 
 
 # --------------------------------------------------------------------------
@@ -360,6 +366,7 @@ macros:
 	@echo "LIBKMIP_SOURCES:   $(LIBKMIP_SOURCES)"
 	@echo "LIBKMIP_SHARED:    $(LIBKMIP_SHARED)"
 	@echo "LIBKMIP_STATIC:    $(LIBKMIP_STATIC)"
+	@echo "KMIPGET_SOURCES:   $(KMIPGET_SOURCES)"
 	@echo ""
 	@echo "RPM_DIR:           $(RPM_DIR)"
 	@echo "RPM_RELEASE:       $(RPM_RELEASE)"
