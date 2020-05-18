@@ -527,7 +527,7 @@ int kmip_bio_get_symmetric_key(BIO *bio,
         kmip_destroy(&ctx);
         return(encode_result);
     }
-    
+
     int sent = BIO_write(bio, ctx.buffer, ctx.index - ctx.buffer);
     if(sent != ctx.index - ctx.buffer)
     {
@@ -994,7 +994,13 @@ int kmip_bio_get_symmetric_key_with_context(KMIP *ctx, BIO *bio,
         encoding = NULL;
         return(encode_result);
     }
-    
+
+    if(kmip_debug_flags & KMIP_DEBUG_REQUEST)
+    {
+        kmip_print_request_message(&rm);
+        kmip_print_buffer(encoding, ctx->index - ctx->buffer);
+    }
+
     int sent = BIO_write(bio, ctx->buffer, ctx->index - ctx->buffer);
     if(sent != ctx->index - ctx->buffer)
     {
@@ -1067,6 +1073,13 @@ int kmip_bio_get_symmetric_key_with_context(KMIP *ctx, BIO *bio,
     /* Decode the response message and retrieve the operation result status. */
     ResponseMessage resp_m = {0};
     int decode_result = kmip_decode_response_message(ctx, &resp_m);
+
+    if(kmip_debug_flags & KMIP_DEBUG_RESPONSE)
+    {
+        kmip_print_response_message(&resp_m);
+        kmip_print_buffer(encoding, buffer_block_size);
+    }
+
     if(decode_result != KMIP_OK)
     {
         kmip_free_response_message(ctx, &resp_m);

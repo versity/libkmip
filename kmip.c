@@ -14,6 +14,25 @@
 #include "kmip_memset.h"
 
 /*
+Debuging stuff
+*/
+
+static FILE *dbgout = NULL;
+uint32_t kmip_debug_flags = KMIP_DEBUG_OFF;
+
+/*
+Debugging utilities
+*/
+
+void kmip_debug(uint32_t flags, FILE *dest)
+{
+    kmip_debug_flags = flags;
+    if (dest != NULL) {
+        dbgout = dest;
+    }
+}
+
+/*
 Miscellaneous Utilities
 */
 
@@ -1171,6 +1190,11 @@ kmip_init(KMIP *ctx, void *buffer, size_t buffer_size, enum kmip_version v)
         return;
     }
 
+    if(dbgout == NULL)
+    {
+        dbgout = stdout;
+    }
+
     ctx->buffer = (uint8 *)buffer;
     ctx->index = ctx->buffer;
     ctx->size = buffer_size;
@@ -1750,10 +1774,11 @@ kmip_print_buffer(void *buffer, int size)
     {
         if(i % 16 == 0)
         {
-            printf("\n0x");
+            fprintf(dbgout, "\n0x");
         }
-        printf("%02X", index[i]);
+        fprintf(dbgout, "%02X", index[i]);
     }
+    fprintf(dbgout, "\n");
 }
 
 void
@@ -1801,7 +1826,7 @@ kmip_print_stack_trace(KMIP *ctx)
     ErrorFrame *index = ctx->frame_index;
     do
     {
-        printf("- %s @ line: %d\n", index->function, index->line);
+        fprintf(dbgout, "- %s @ line: %d\n", index->function, index->line);
     } while(index-- != ctx->errors);
 }
 
@@ -1872,7 +1897,7 @@ kmip_error_string(int value)
 void
 kmip_print_error_string(int value)
 {
-    printf("%s", kmip_error_string(value));
+    fprintf(dbgout, "%s", kmip_error_string(value));
 }
 
 void
@@ -1880,26 +1905,26 @@ kmip_print_attestation_type_enum(enum attestation_type value)
 {
     if(value == 0)
     {
-        printf("-");
+        fprintf(dbgout, "-");
         return;
     }
 
     switch(value)
     {
         case KMIP_ATTEST_TPM_QUOTE:
-        printf("TPM Quote");
+        fprintf(dbgout, "TPM Quote");
         break;
 
         case KMIP_ATTEST_TCG_INTEGRITY_REPORT:
-        printf("TCG Integrity Report");
+        fprintf(dbgout, "TCG Integrity Report");
         break;
 
         case KMIP_ATTEST_SAML_ASSERTION:
-        printf("SAML Assertion");
+        fprintf(dbgout, "SAML Assertion");
         break;
 
         default:
-        printf("Unknown");
+        fprintf(dbgout, "Unknown");
         break;
     };
 }
@@ -1909,26 +1934,26 @@ kmip_print_batch_error_continuation_option(enum batch_error_continuation_option 
 {
     if(value == 0)
     {
-        printf("-");
+        fprintf(dbgout, "-");
         return;
     }
 
     switch(value)
     {
         case KMIP_BATCH_CONTINUE:
-        printf("Continue");
+        fprintf(dbgout, "Continue");
         break;
 
         case KMIP_BATCH_STOP:
-        printf("Stop");
+        fprintf(dbgout, "Stop");
         break;
 
         case KMIP_BATCH_UNDO:
-        printf("Undo");
+        fprintf(dbgout, "Undo");
         break;
 
         default:
-        printf("Unknown");
+        fprintf(dbgout, "Unknown");
         break;
     };
 }
@@ -1938,26 +1963,26 @@ kmip_print_operation_enum(enum operation value)
 {
     if(value == 0)
     {
-        printf("-");
+        fprintf(dbgout, "-");
         return;
     }
 
     switch(value)
     {
         case KMIP_OP_CREATE:
-        printf("Create");
+        fprintf(dbgout, "Create");
         break;
 
         case KMIP_OP_GET:
-        printf("Get");
+        fprintf(dbgout, "Get");
         break;
 
         case KMIP_OP_DESTROY:
-        printf("Destroy");
+        fprintf(dbgout, "Destroy");
         break;
 
         default:
-        printf("Unknown");
+        fprintf(dbgout, "Unknown");
         break;
     };
 }
@@ -1965,7 +1990,7 @@ kmip_print_operation_enum(enum operation value)
 void
 kmip_print_result_status_enum(enum result_status value)
 {
-    printf("%s", kmip_result_status_enum(value));
+    fprintf(dbgout, "%s", kmip_result_status_enum(value));
 }
 
 const char *
@@ -2004,7 +2029,7 @@ kmip_result_status_enum(enum result_status value)
 void
 kmip_print_result_reason_enum(enum result_reason value)
 {
-    printf("%s", kmip_result_reason_enum(value));
+    fprintf(dbgout, "%s", kmip_result_reason_enum(value));
 }
 
 const char *
@@ -2318,54 +2343,54 @@ kmip_print_object_type_enum(enum object_type value)
 {
     if(value == 0)
     {
-        printf("-");
+        fprintf(dbgout, "-");
         return;
     }
 
     switch(value)
     {
         case KMIP_OBJTYPE_CERTIFICATE:
-        printf("Certificate");
+        fprintf(dbgout, "Certificate");
         break;
 
         case KMIP_OBJTYPE_SYMMETRIC_KEY:
-        printf("Symmetric Key");
+        fprintf(dbgout, "Symmetric Key");
         break;
 
         case KMIP_OBJTYPE_PUBLIC_KEY:
-        printf("Public Key");
+        fprintf(dbgout, "Public Key");
         break;
 
         case KMIP_OBJTYPE_PRIVATE_KEY:
-        printf("Private Key");
+        fprintf(dbgout, "Private Key");
         break;
 
         case KMIP_OBJTYPE_SPLIT_KEY:
-        printf("Split Key");
+        fprintf(dbgout, "Split Key");
         break;
 
         case KMIP_OBJTYPE_TEMPLATE:
-        printf("Template");
+        fprintf(dbgout, "Template");
         break;
 
         case KMIP_OBJTYPE_SECRET_DATA:
-        printf("Secret Data");
+        fprintf(dbgout, "Secret Data");
         break;
 
         case KMIP_OBJTYPE_OPAQUE_OBJECT:
-        printf("Opaque Object");
+        fprintf(dbgout, "Opaque Object");
         break;
 
         case KMIP_OBJTYPE_PGP_KEY:
-        printf("PGP Key");
+        fprintf(dbgout, "PGP Key");
         break;
 
         case KMIP_OBJTYPE_CERTIFICATE_REQUEST:
-        printf("Certificate Request");
+        fprintf(dbgout, "Certificate Request");
         break;
 
         default:
-        printf("Unknown");
+        fprintf(dbgout, "Unknown");
         break;
     };
 }
@@ -2375,106 +2400,106 @@ kmip_print_key_format_type_enum(enum key_format_type value)
 {
     if(value == 0)
     {
-        printf("-");
+        fprintf(dbgout, "-");
         return;
     }
 
     switch(value)
     {
         case KMIP_KEYFORMAT_RAW:
-        printf("Raw");
+        fprintf(dbgout, "Raw");
         break;
 
         case KMIP_KEYFORMAT_OPAQUE:
-        printf("Opaque");
+        fprintf(dbgout, "Opaque");
         break;
 
         case KMIP_KEYFORMAT_PKCS1:
-        printf("PKCS1");
+        fprintf(dbgout, "PKCS1");
         break;
 
         case KMIP_KEYFORMAT_PKCS8:
-        printf("PKCS8");
+        fprintf(dbgout, "PKCS8");
         break;
 
         case KMIP_KEYFORMAT_X509:
-        printf("X509");
+        fprintf(dbgout, "X509");
         break;
 
         case KMIP_KEYFORMAT_EC_PRIVATE_KEY:
-        printf("EC Private Key");
+        fprintf(dbgout, "EC Private Key");
         break;
 
         case KMIP_KEYFORMAT_TRANS_SYMMETRIC_KEY:
-        printf("Transparent Symmetric Key");
+        fprintf(dbgout, "Transparent Symmetric Key");
         break;
 
         case KMIP_KEYFORMAT_TRANS_DSA_PRIVATE_KEY:
-        printf("Transparent DSA Private Key");
+        fprintf(dbgout, "Transparent DSA Private Key");
         break;
 
         case KMIP_KEYFORMAT_TRANS_DSA_PUBLIC_KEY:
-        printf("Transparent DSA Public Key");
+        fprintf(dbgout, "Transparent DSA Public Key");
         break;
 
         case KMIP_KEYFORMAT_TRANS_RSA_PRIVATE_KEY:
-        printf("Transparent RSA Private Key");
+        fprintf(dbgout, "Transparent RSA Private Key");
         break;
 
         case KMIP_KEYFORMAT_TRANS_RSA_PUBLIC_KEY:
-        printf("Transparent RSA Public Key");
+        fprintf(dbgout, "Transparent RSA Public Key");
         break;
 
         case KMIP_KEYFORMAT_TRANS_DH_PRIVATE_KEY:
-        printf("Transparent DH Private Key");
+        fprintf(dbgout, "Transparent DH Private Key");
         break;
 
         case KMIP_KEYFORMAT_TRANS_DH_PUBLIC_KEY:
-        printf("Transparent DH Public Key");
+        fprintf(dbgout, "Transparent DH Public Key");
         break;
 
         case KMIP_KEYFORMAT_TRANS_ECDSA_PRIVATE_KEY:
-        printf("Transparent ECDSA Private Key");
+        fprintf(dbgout, "Transparent ECDSA Private Key");
         break;
 
         case KMIP_KEYFORMAT_TRANS_ECDSA_PUBLIC_KEY:
-        printf("Transparent ECDSA Public Key");
+        fprintf(dbgout, "Transparent ECDSA Public Key");
         break;
 
         case KMIP_KEYFORMAT_TRANS_ECDH_PRIVATE_KEY:
-        printf("Transparent ECDH Private Key");
+        fprintf(dbgout, "Transparent ECDH Private Key");
         break;
 
         case KMIP_KEYFORMAT_TRANS_ECDH_PUBLIC_KEY:
-        printf("Transparent ECDH Public Key");
+        fprintf(dbgout, "Transparent ECDH Public Key");
         break;
 
         case KMIP_KEYFORMAT_TRANS_ECMQV_PRIVATE_KEY:
-        printf("Transparent ECMQV Private Key");
+        fprintf(dbgout, "Transparent ECMQV Private Key");
         break;
 
         case KMIP_KEYFORMAT_TRANS_ECMQV_PUBLIC_KEY:
-        printf("Transparent ECMQV Public Key");
+        fprintf(dbgout, "Transparent ECMQV Public Key");
         break;
 
         case KMIP_KEYFORMAT_TRANS_EC_PRIVATE_KEY:
-        printf("Transparent EC Private Key");
+        fprintf(dbgout, "Transparent EC Private Key");
         break;
 
         case KMIP_KEYFORMAT_TRANS_EC_PUBLIC_KEY:
-        printf("Transparent EC Public Key");
+        fprintf(dbgout, "Transparent EC Public Key");
         break;
 
         case KMIP_KEYFORMAT_PKCS12:
-        printf("PKCS#12");
+        fprintf(dbgout, "PKCS#12");
         break;
 
         case KMIP_KEYFORMAT_PKCS10:
-        printf("PKCS#10");
+        fprintf(dbgout, "PKCS#10");
         break;
 
         default:
-        printf("Unknown");
+        fprintf(dbgout, "Unknown");
         break;
     };
 }
@@ -2484,30 +2509,30 @@ kmip_print_key_compression_type_enum(enum key_compression_type value)
 {
     if(value == 0)
     {
-        printf("-");
+        fprintf(dbgout, "-");
         return;
     }
 
     switch(value)
     {
         case KMIP_KEYCOMP_EC_PUB_UNCOMPRESSED:
-        printf("EC Public Key Type Uncompressed");
+        fprintf(dbgout, "EC Public Key Type Uncompressed");
         break;
 
         case KMIP_KEYCOMP_EC_PUB_X962_COMPRESSED_PRIME:
-        printf("EC Public Key Type X9.62 Compressed Prime");
+        fprintf(dbgout, "EC Public Key Type X9.62 Compressed Prime");
         break;
 
         case KMIP_KEYCOMP_EC_PUB_X962_COMPRESSED_CHAR2:
-        printf("EC Public Key Type X9.62 Compressed Char2");
+        fprintf(dbgout, "EC Public Key Type X9.62 Compressed Char2");
         break;
 
         case KMIP_KEYCOMP_EC_PUB_X962_HYBRID:
-        printf("EC Public Key Type X9.62 Hybrid");
+        fprintf(dbgout, "EC Public Key Type X9.62 Hybrid");
         break;
 
         default:
-        printf("Unknown");
+        fprintf(dbgout, "Unknown");
         break;
     };
 }
@@ -2517,238 +2542,238 @@ kmip_print_cryptographic_algorithm_enum(enum cryptographic_algorithm value)
 {
     if(value == 0)
     {
-        printf("-");
+        fprintf(dbgout, "-");
         return;
     }
 
     switch(value)
     {
         case KMIP_CRYPTOALG_DES:
-        printf("DES");
+        fprintf(dbgout, "DES");
         break;
 
         case KMIP_CRYPTOALG_TRIPLE_DES:
-        printf("3DES");
+        fprintf(dbgout, "3DES");
         break;
 
         case KMIP_CRYPTOALG_AES:
-        printf("AES");
+        fprintf(dbgout, "AES");
         break;
 
         case KMIP_CRYPTOALG_RSA:
-        printf("RSA");
+        fprintf(dbgout, "RSA");
         break;
 
         case KMIP_CRYPTOALG_DSA:
-        printf("DSA");
+        fprintf(dbgout, "DSA");
         break;
 
         case KMIP_CRYPTOALG_ECDSA:
-        printf("ECDSA");
+        fprintf(dbgout, "ECDSA");
         break;
 
         case KMIP_CRYPTOALG_HMAC_SHA1:
-        printf("SHA1");
+        fprintf(dbgout, "SHA1");
         break;
 
         case KMIP_CRYPTOALG_HMAC_SHA224:
-        printf("SHA224");
+        fprintf(dbgout, "SHA224");
         break;
 
         case KMIP_CRYPTOALG_HMAC_SHA256:
-        printf("SHA256");
+        fprintf(dbgout, "SHA256");
         break;
 
         case KMIP_CRYPTOALG_HMAC_SHA384:
-        printf("SHA384");
+        fprintf(dbgout, "SHA384");
         break;
 
         case KMIP_CRYPTOALG_HMAC_SHA512:
-        printf("SHA512");
+        fprintf(dbgout, "SHA512");
         break;
 
         case KMIP_CRYPTOALG_HMAC_MD5:
-        printf("MD5");
+        fprintf(dbgout, "MD5");
         break;
 
         case KMIP_CRYPTOALG_DH:
-        printf("DH");
+        fprintf(dbgout, "DH");
         break;
 
         case KMIP_CRYPTOALG_ECDH:
-        printf("ECDH");
+        fprintf(dbgout, "ECDH");
         break;
 
         case KMIP_CRYPTOALG_ECMQV:
-        printf("ECMQV");
+        fprintf(dbgout, "ECMQV");
         break;
 
         case KMIP_CRYPTOALG_BLOWFISH:
-        printf("Blowfish");
+        fprintf(dbgout, "Blowfish");
         break;
 
         case KMIP_CRYPTOALG_CAMELLIA:
-        printf("Camellia");
+        fprintf(dbgout, "Camellia");
         break;
 
         case KMIP_CRYPTOALG_CAST5:
-        printf("CAST5");
+        fprintf(dbgout, "CAST5");
         break;
 
         case KMIP_CRYPTOALG_IDEA:
-        printf("IDEA");
+        fprintf(dbgout, "IDEA");
         break;
 
         case KMIP_CRYPTOALG_MARS:
-        printf("MARS");
+        fprintf(dbgout, "MARS");
         break;
 
         case KMIP_CRYPTOALG_RC2:
-        printf("RC2");
+        fprintf(dbgout, "RC2");
         break;
 
         case KMIP_CRYPTOALG_RC4:
-        printf("RC4");
+        fprintf(dbgout, "RC4");
         break;
 
         case KMIP_CRYPTOALG_RC5:
-        printf("RC5");
+        fprintf(dbgout, "RC5");
         break;
 
         case KMIP_CRYPTOALG_SKIPJACK:
-        printf("Skipjack");
+        fprintf(dbgout, "Skipjack");
         break;
 
         case KMIP_CRYPTOALG_TWOFISH:
-        printf("Twofish");
+        fprintf(dbgout, "Twofish");
         break;
 
         case KMIP_CRYPTOALG_EC:
-        printf("EC");
+        fprintf(dbgout, "EC");
         break;
 
         case KMIP_CRYPTOALG_ONE_TIME_PAD:
-        printf("One Time Pad");
+        fprintf(dbgout, "One Time Pad");
         break;
 
         case KMIP_CRYPTOALG_CHACHA20:
-        printf("ChaCha20");
+        fprintf(dbgout, "ChaCha20");
         break;
 
         case KMIP_CRYPTOALG_POLY1305:
-        printf("Poly1305");
+        fprintf(dbgout, "Poly1305");
         break;
 
         case KMIP_CRYPTOALG_CHACHA20_POLY1305:
-        printf("ChaCha20 Poly1305");
+        fprintf(dbgout, "ChaCha20 Poly1305");
         break;
 
         case KMIP_CRYPTOALG_SHA3_224:
-        printf("SHA3-224");
+        fprintf(dbgout, "SHA3-224");
         break;
 
         case KMIP_CRYPTOALG_SHA3_256:
-        printf("SHA3-256");
+        fprintf(dbgout, "SHA3-256");
         break;
 
         case KMIP_CRYPTOALG_SHA3_384:
-        printf("SHA3-384");
+        fprintf(dbgout, "SHA3-384");
         break;
 
         case KMIP_CRYPTOALG_SHA3_512:
-        printf("SHA3-512");
+        fprintf(dbgout, "SHA3-512");
         break;
 
         case KMIP_CRYPTOALG_HMAC_SHA3_224:
-        printf("HMAC SHA3-224");
+        fprintf(dbgout, "HMAC SHA3-224");
         break;
 
         case KMIP_CRYPTOALG_HMAC_SHA3_256:
-        printf("HMAC SHA3-256");
+        fprintf(dbgout, "HMAC SHA3-256");
         break;
 
         case KMIP_CRYPTOALG_HMAC_SHA3_384:
-        printf("HMAC SHA3-384");
+        fprintf(dbgout, "HMAC SHA3-384");
         break;
 
         case KMIP_CRYPTOALG_HMAC_SHA3_512:
-        printf("HMAC SHA3-512");
+        fprintf(dbgout, "HMAC SHA3-512");
         break;
 
         case KMIP_CRYPTOALG_SHAKE_128:
-        printf("SHAKE-128");
+        fprintf(dbgout, "SHAKE-128");
         break;
 
         case KMIP_CRYPTOALG_SHAKE_256:
-        printf("SHAKE-256");
+        fprintf(dbgout, "SHAKE-256");
         break;
 
         case KMIP_CRYPTOALG_ARIA:
-        printf("ARIA");
+        fprintf(dbgout, "ARIA");
         break;
 
         case KMIP_CRYPTOALG_SEED:
-        printf("SEED");
+        fprintf(dbgout, "SEED");
         break;
 
         case KMIP_CRYPTOALG_SM2:
-        printf("SM2");
+        fprintf(dbgout, "SM2");
         break;
 
         case KMIP_CRYPTOALG_SM3:
-        printf("SM3");
+        fprintf(dbgout, "SM3");
         break;
 
         case KMIP_CRYPTOALG_SM4:
-        printf("SM4");
+        fprintf(dbgout, "SM4");
         break;
 
         case KMIP_CRYPTOALG_GOST_R_34_10_2012:
-        printf("GOST R 34.10-2012");
+        fprintf(dbgout, "GOST R 34.10-2012");
         break;
 
         case KMIP_CRYPTOALG_GOST_R_34_11_2012:
-        printf("GOST R 34.11-2012");
+        fprintf(dbgout, "GOST R 34.11-2012");
         break;
 
         case KMIP_CRYPTOALG_GOST_R_34_13_2015:
-        printf("GOST R 34.13-2015");
+        fprintf(dbgout, "GOST R 34.13-2015");
         break;
 
         case KMIP_CRYPTOALG_GOST_28147_89:
-        printf("GOST 28147-89");
+        fprintf(dbgout, "GOST 28147-89");
         break;
 
         case KMIP_CRYPTOALG_XMSS:
-        printf("XMSS");
+        fprintf(dbgout, "XMSS");
         break;
 
         case KMIP_CRYPTOALG_SPHINCS_256:
-        printf("SPHINCS-256");
+        fprintf(dbgout, "SPHINCS-256");
         break;
 
         case KMIP_CRYPTOALG_MCELIECE:
-        printf("McEliece");
+        fprintf(dbgout, "McEliece");
         break;
 
         case KMIP_CRYPTOALG_MCELIECE_6960119:
-        printf("McEliece 6960119");
+        fprintf(dbgout, "McEliece 6960119");
         break;
 
         case KMIP_CRYPTOALG_MCELIECE_8192128:
-        printf("McEliece 8192128");
+        fprintf(dbgout, "McEliece 8192128");
         break;
 
         case KMIP_CRYPTOALG_ED25519:
-        printf("Ed25519");
+        fprintf(dbgout, "Ed25519");
         break;
 
         case KMIP_CRYPTOALG_ED448:
-        printf("Ed448");
+        fprintf(dbgout, "Ed448");
         break;
 
         default:
-        printf("Unknown");
+        fprintf(dbgout, "Unknown");
         break;
     };
 }
@@ -2758,22 +2783,22 @@ kmip_print_name_type_enum(enum name_type value)
 {
     if(value == 0)
     {
-        printf("-");
+        fprintf(dbgout, "-");
         return;
     }
 
     switch(value)
     {
         case KMIP_NAME_UNINTERPRETED_TEXT_STRING:
-        printf("Uninterpreted Text String");
+        fprintf(dbgout, "Uninterpreted Text String");
         break;
 
         case KMIP_NAME_URI:
-        printf("URI");
+        fprintf(dbgout, "URI");
         break;
 
         default:
-        printf("Unknown");
+        fprintf(dbgout, "Unknown");
         break;
     };
 }
@@ -2783,7 +2808,7 @@ kmip_print_attribute_type_enum(enum attribute_type value)
 {
     if((int)value == KMIP_UNSET)
     {
-        printf("-");
+        fprintf(dbgout, "-");
         return;
     }
 
@@ -2791,44 +2816,44 @@ kmip_print_attribute_type_enum(enum attribute_type value)
     {
         case KMIP_ATTR_APPLICATION_SPECIFIC_INFORMATION:
         {
-            printf("Application Specific Information");
+            fprintf(dbgout, "Application Specific Information");
         }
         break;
 
         case KMIP_ATTR_UNIQUE_IDENTIFIER:
-        printf("Unique Identifier");
+        fprintf(dbgout, "Unique Identifier");
         break;
 
         case KMIP_ATTR_NAME:
-        printf("Name");
+        fprintf(dbgout, "Name");
         break;
 
         case KMIP_ATTR_OBJECT_TYPE:
-        printf("Object Type");
+        fprintf(dbgout, "Object Type");
         break;
 
         case KMIP_ATTR_CRYPTOGRAPHIC_ALGORITHM:
-        printf("Cryptographic Algorithm");
+        fprintf(dbgout, "Cryptographic Algorithm");
         break;
 
         case KMIP_ATTR_CRYPTOGRAPHIC_LENGTH:
-        printf("Cryptographic Length");
+        fprintf(dbgout, "Cryptographic Length");
         break;
 
         case KMIP_ATTR_OPERATION_POLICY_NAME:
-        printf("Operation Policy Name");
+        fprintf(dbgout, "Operation Policy Name");
         break;
 
         case KMIP_ATTR_CRYPTOGRAPHIC_USAGE_MASK:
-        printf("Cryptographic Usage Mask");
+        fprintf(dbgout, "Cryptographic Usage Mask");
         break;
 
         case KMIP_ATTR_STATE:
-        printf("State");
+        fprintf(dbgout, "State");
         break;
 
         default:
-        printf("Unknown");
+        fprintf(dbgout, "Unknown");
         break;
     };
 }
@@ -2838,38 +2863,38 @@ kmip_print_state_enum(enum state value)
 {
     if(value == 0)
     {
-        printf("-");
+        fprintf(dbgout, "-");
         return;
     }
 
     switch(value)
     {
         case KMIP_STATE_PRE_ACTIVE:
-        printf("Pre-Active");
+        fprintf(dbgout, "Pre-Active");
         break;
 
         case KMIP_STATE_ACTIVE:
-        printf("Active");
+        fprintf(dbgout, "Active");
         break;
 
         case KMIP_STATE_DEACTIVATED:
-        printf("Deactivated");
+        fprintf(dbgout, "Deactivated");
         break;
 
         case KMIP_STATE_COMPROMISED:
-        printf("Compromised");
+        fprintf(dbgout, "Compromised");
         break;
 
         case KMIP_STATE_DESTROYED:
-        printf("Destroyed");
+        fprintf(dbgout, "Destroyed");
         break;
 
         case KMIP_STATE_DESTROYED_COMPROMISED:
-        printf("Destroyed Compromised");
+        fprintf(dbgout, "Destroyed Compromised");
         break;
 
         default:
-        printf("Unknown");
+        fprintf(dbgout, "Unknown");
         break;
     };
 }
@@ -2879,86 +2904,86 @@ kmip_print_block_cipher_mode_enum(enum block_cipher_mode value)
 {
     if(value == 0)
     {
-        printf("-");
+        fprintf(dbgout, "-");
         return;
     }
 
     switch(value)
     {
         case KMIP_BLOCK_CBC:
-        printf("CBC");
+        fprintf(dbgout, "CBC");
         break;
 
         case KMIP_BLOCK_ECB:
-        printf("ECB");
+        fprintf(dbgout, "ECB");
         break;
 
         case KMIP_BLOCK_PCBC:
-        printf("PCBC");
+        fprintf(dbgout, "PCBC");
         break;
 
         case KMIP_BLOCK_CFB:
-        printf("CFB");
+        fprintf(dbgout, "CFB");
         break;
 
         case KMIP_BLOCK_OFB:
-        printf("OFB");
+        fprintf(dbgout, "OFB");
         break;
 
         case KMIP_BLOCK_CTR:
-        printf("CTR");
+        fprintf(dbgout, "CTR");
         break;
 
         case KMIP_BLOCK_CMAC:
-        printf("CMAC");
+        fprintf(dbgout, "CMAC");
         break;
 
         case KMIP_BLOCK_CCM:
-        printf("CCM");
+        fprintf(dbgout, "CCM");
         break;
 
         case KMIP_BLOCK_GCM:
-        printf("GCM");
+        fprintf(dbgout, "GCM");
         break;
 
         case KMIP_BLOCK_CBC_MAC:
-        printf("CBC-MAC");
+        fprintf(dbgout, "CBC-MAC");
         break;
 
         case KMIP_BLOCK_XTS:
-        printf("XTS");
+        fprintf(dbgout, "XTS");
         break;
 
         case KMIP_BLOCK_AES_KEY_WRAP_PADDING:
-        printf("AESKeyWrapPadding");
+        fprintf(dbgout, "AESKeyWrapPadding");
         break;
 
         case KMIP_BLOCK_NIST_KEY_WRAP:
-        printf("NISTKeyWrap");
+        fprintf(dbgout, "NISTKeyWrap");
         break;
 
         case KMIP_BLOCK_X9102_AESKW:
-        printf("X9.102 AESKW");
+        fprintf(dbgout, "X9.102 AESKW");
         break;
 
         case KMIP_BLOCK_X9102_TDKW:
-        printf("X9.102 TDKW");
+        fprintf(dbgout, "X9.102 TDKW");
         break;
 
         case KMIP_BLOCK_X9102_AKW1:
-        printf("X9.102 AKW1");
+        fprintf(dbgout, "X9.102 AKW1");
         break;
 
         case KMIP_BLOCK_X9102_AKW2:
-        printf("X9.102 AKW2");
+        fprintf(dbgout, "X9.102 AKW2");
         break;
 
         case KMIP_BLOCK_AEAD:
-        printf("AEAD");
+        fprintf(dbgout, "AEAD");
         break;
 
         default:
-        printf("Unknown");
+        fprintf(dbgout, "Unknown");
         break;
     };
 }
@@ -2968,54 +2993,54 @@ kmip_print_padding_method_enum(enum padding_method value)
 {
     if(value == 0)
     {
-        printf("-");
+        fprintf(dbgout, "-");
         return;
     }
 
     switch(value)
     {
         case KMIP_PAD_NONE:
-        printf("None");
+        fprintf(dbgout, "None");
         break;
 
         case KMIP_PAD_OAEP:
-        printf("OAEP");
+        fprintf(dbgout, "OAEP");
         break;
 
         case KMIP_PAD_PKCS5:
-        printf("PKCS5");
+        fprintf(dbgout, "PKCS5");
         break;
 
         case KMIP_PAD_SSL3:
-        printf("SSL3");
+        fprintf(dbgout, "SSL3");
         break;
 
         case KMIP_PAD_ZEROS:
-        printf("Zeros");
+        fprintf(dbgout, "Zeros");
         break;
 
         case KMIP_PAD_ANSI_X923:
-        printf("ANSI X9.23");
+        fprintf(dbgout, "ANSI X9.23");
         break;
 
         case KMIP_PAD_ISO_10126:
-        printf("ISO 10126");
+        fprintf(dbgout, "ISO 10126");
         break;
 
         case KMIP_PAD_PKCS1v15:
-        printf("PKCS1 v1.5");
+        fprintf(dbgout, "PKCS1 v1.5");
         break;
 
         case KMIP_PAD_X931:
-        printf("X9.31");
+        fprintf(dbgout, "X9.31");
         break;
 
         case KMIP_PAD_PSS:
-        printf("PSS");
+        fprintf(dbgout, "PSS");
         break;
 
         default:
-        printf("Unknown");
+        fprintf(dbgout, "Unknown");
         break;
     };
 }
@@ -3025,82 +3050,82 @@ kmip_print_hashing_algorithm_enum(enum hashing_algorithm value)
 {
     if(value == 0)
     {
-        printf("-");
+        fprintf(dbgout, "-");
         return;
     }
 
     switch(value)
     {
         case KMIP_HASH_MD2:
-        printf("MD2");
+        fprintf(dbgout, "MD2");
         break;
 
         case KMIP_HASH_MD4:
-        printf("MD4");
+        fprintf(dbgout, "MD4");
         break;
 
         case KMIP_HASH_MD5:
-        printf("MD5");
+        fprintf(dbgout, "MD5");
         break;
 
         case KMIP_HASH_SHA1:
-        printf("SHA-1");
+        fprintf(dbgout, "SHA-1");
         break;
 
         case KMIP_HASH_SHA224:
-        printf("SHA-224");
+        fprintf(dbgout, "SHA-224");
         break;
 
         case KMIP_HASH_SHA256:
-        printf("SHA-256");
+        fprintf(dbgout, "SHA-256");
         break;
 
         case KMIP_HASH_SHA384:
-        printf("SHA-384");
+        fprintf(dbgout, "SHA-384");
         break;
 
         case KMIP_HASH_SHA512:
-        printf("SHA-512");
+        fprintf(dbgout, "SHA-512");
         break;
 
         case KMIP_HASH_RIPEMD160:
-        printf("RIPEMD-160");
+        fprintf(dbgout, "RIPEMD-160");
         break;
 
         case KMIP_HASH_TIGER:
-        printf("Tiger");
+        fprintf(dbgout, "Tiger");
         break;
 
         case KMIP_HASH_WHIRLPOOL:
-        printf("Whirlpool");
+        fprintf(dbgout, "Whirlpool");
         break;
 
         case KMIP_HASH_SHA512_224:
-        printf("SHA-512/224");
+        fprintf(dbgout, "SHA-512/224");
         break;
 
         case KMIP_HASH_SHA512_256:
-        printf("SHA-512/256");
+        fprintf(dbgout, "SHA-512/256");
         break;
 
         case KMIP_HASH_SHA3_224:
-        printf("SHA-3-224");
+        fprintf(dbgout, "SHA-3-224");
         break;
 
         case KMIP_HASH_SHA3_256:
-        printf("SHA-3-256");
+        fprintf(dbgout, "SHA-3-256");
         break;
 
         case KMIP_HASH_SHA3_384:
-        printf("SHA-3-384");
+        fprintf(dbgout, "SHA-3-384");
         break;
 
         case KMIP_HASH_SHA3_512:
-        printf("SHA-3-512");
+        fprintf(dbgout, "SHA-3-512");
         break;
 
         default:
-        printf("Unknown");
+        fprintf(dbgout, "Unknown");
         break;
     };
 }
@@ -3110,110 +3135,110 @@ kmip_print_key_role_type_enum(enum key_role_type value)
 {
     if(value == 0)
     {
-        printf("-");
+        fprintf(dbgout, "-");
         return;
     }
 
     switch(value)
     {
         case KMIP_ROLE_BDK:
-        printf("BDK");
+        fprintf(dbgout, "BDK");
         break;
 
         case KMIP_ROLE_CVK:
-        printf("CVK");
+        fprintf(dbgout, "CVK");
         break;
 
         case KMIP_ROLE_DEK:
-        printf("DEK");
+        fprintf(dbgout, "DEK");
         break;
 
         case KMIP_ROLE_MKAC:
-        printf("MKAC");
+        fprintf(dbgout, "MKAC");
         break;
 
         case KMIP_ROLE_MKSMC:
-        printf("MKSMC");
+        fprintf(dbgout, "MKSMC");
         break;
 
         case KMIP_ROLE_MKSMI:
-        printf("MKSMI");
+        fprintf(dbgout, "MKSMI");
         break;
 
         case KMIP_ROLE_MKDAC:
-        printf("MKDAC");
+        fprintf(dbgout, "MKDAC");
         break;
 
         case KMIP_ROLE_MKDN:
-        printf("MKDN");
+        fprintf(dbgout, "MKDN");
         break;
 
         case KMIP_ROLE_MKCP:
-        printf("MKCP");
+        fprintf(dbgout, "MKCP");
         break;
 
         case KMIP_ROLE_MKOTH:
-        printf("MKOTH");
+        fprintf(dbgout, "MKOTH");
         break;
 
         case KMIP_ROLE_KEK:
-        printf("KEK");
+        fprintf(dbgout, "KEK");
         break;
 
         case KMIP_ROLE_MAC16609:
-        printf("MAC16609");
+        fprintf(dbgout, "MAC16609");
         break;
 
         case KMIP_ROLE_MAC97971:
-        printf("MAC97971");
+        fprintf(dbgout, "MAC97971");
         break;
 
         case KMIP_ROLE_MAC97972:
-        printf("MAC97972");
+        fprintf(dbgout, "MAC97972");
         break;
 
         case KMIP_ROLE_MAC97973:
-        printf("MAC97973");
+        fprintf(dbgout, "MAC97973");
         break;
 
         case KMIP_ROLE_MAC97974:
-        printf("MAC97974");
+        fprintf(dbgout, "MAC97974");
         break;
 
         case KMIP_ROLE_MAC97975:
-        printf("MAC97975");
+        fprintf(dbgout, "MAC97975");
         break;
 
         case KMIP_ROLE_ZPK:
-        printf("ZPK");
+        fprintf(dbgout, "ZPK");
         break;
 
         case KMIP_ROLE_PVKIBM:
-        printf("PVKIBM");
+        fprintf(dbgout, "PVKIBM");
         break;
 
         case KMIP_ROLE_PVKPVV:
-        printf("PVKPVV");
+        fprintf(dbgout, "PVKPVV");
         break;
 
         case KMIP_ROLE_PVKOTH:
-        printf("PVKOTH");
+        fprintf(dbgout, "PVKOTH");
         break;
 
         case KMIP_ROLE_DUKPT:
-        printf("DUKPT");
+        fprintf(dbgout, "DUKPT");
         break;
 
         case KMIP_ROLE_IV:
-        printf("IV");
+        fprintf(dbgout, "IV");
         break;
 
         case KMIP_ROLE_TRKBK:
-        printf("TRKBK");
+        fprintf(dbgout, "TRKBK");
         break;
 
         default:
-        printf("Unknown");
+        fprintf(dbgout, "Unknown");
         break;
     };
 }
@@ -3223,90 +3248,90 @@ kmip_print_digital_signature_algorithm_enum(enum digital_signature_algorithm val
 {
     if(value == 0)
     {
-        printf("-");
+        fprintf(dbgout, "-");
         return;
     }
 
     switch(value)
     {
         case KMIP_DIGITAL_MD2_WITH_RSA:
-        printf("MD2 with RSA Encryption (PKCS#1 v1.5)");
+        fprintf(dbgout, "MD2 with RSA Encryption (PKCS#1 v1.5)");
         break;
 
         case KMIP_DIGITAL_MD5_WITH_RSA:
-        printf("MD5 with RSA Encryption (PKCS#1 v1.5)");
+        fprintf(dbgout, "MD5 with RSA Encryption (PKCS#1 v1.5)");
         break;
 
         case KMIP_DIGITAL_SHA1_WITH_RSA:
-        printf("SHA-1 with RSA Encryption (PKCS#1 v1.5)");
+        fprintf(dbgout, "SHA-1 with RSA Encryption (PKCS#1 v1.5)");
         break;
 
         case KMIP_DIGITAL_SHA224_WITH_RSA:
-        printf("SHA-224 with RSA Encryption (PKCS#1 v1.5)");
+        fprintf(dbgout, "SHA-224 with RSA Encryption (PKCS#1 v1.5)");
         break;
 
         case KMIP_DIGITAL_SHA256_WITH_RSA:
-        printf("SHA-256 with RSA Encryption (PKCS#1 v1.5)");
+        fprintf(dbgout, "SHA-256 with RSA Encryption (PKCS#1 v1.5)");
         break;
 
         case KMIP_DIGITAL_SHA384_WITH_RSA:
-        printf("SHA-384 with RSA Encryption (PKCS#1 v1.5)");
+        fprintf(dbgout, "SHA-384 with RSA Encryption (PKCS#1 v1.5)");
         break;
 
         case KMIP_DIGITAL_SHA512_WITH_RSA:
-        printf("SHA-512 with RSA Encryption (PKCS#1 v1.5)");
+        fprintf(dbgout, "SHA-512 with RSA Encryption (PKCS#1 v1.5)");
         break;
 
         case KMIP_DIGITAL_RSASSA_PSS:
-        printf("RSASSA-PSS (PKCS#1 v2.1)");
+        fprintf(dbgout, "RSASSA-PSS (PKCS#1 v2.1)");
         break;
 
         case KMIP_DIGITAL_DSA_WITH_SHA1:
-        printf("DSA with SHA-1");
+        fprintf(dbgout, "DSA with SHA-1");
         break;
 
         case KMIP_DIGITAL_DSA_WITH_SHA224:
-        printf("DSA with SHA224");
+        fprintf(dbgout, "DSA with SHA224");
         break;
 
         case KMIP_DIGITAL_DSA_WITH_SHA256:
-        printf("DSA with SHA256");
+        fprintf(dbgout, "DSA with SHA256");
         break;
 
         case KMIP_DIGITAL_ECDSA_WITH_SHA1:
-        printf("ECDSA with SHA-1");
+        fprintf(dbgout, "ECDSA with SHA-1");
         break;
 
         case KMIP_DIGITAL_ECDSA_WITH_SHA224:
-        printf("ECDSA with SHA224");
+        fprintf(dbgout, "ECDSA with SHA224");
         break;
 
         case KMIP_DIGITAL_ECDSA_WITH_SHA256:
-        printf("ECDSA with SHA256");
+        fprintf(dbgout, "ECDSA with SHA256");
         break;
 
         case KMIP_DIGITAL_ECDSA_WITH_SHA384:
-        printf("ECDSA with SHA384");
+        fprintf(dbgout, "ECDSA with SHA384");
         break;
 
         case KMIP_DIGITAL_ECDSA_WITH_SHA512:
-        printf("ECDSA with SHA512");
+        fprintf(dbgout, "ECDSA with SHA512");
         break;
 
         case KMIP_DIGITAL_SHA3_256_WITH_RSA:
-        printf("SHA3-256 with RSA Encryption");
+        fprintf(dbgout, "SHA3-256 with RSA Encryption");
         break;
 
         case KMIP_DIGITAL_SHA3_384_WITH_RSA:
-        printf("SHA3-384 with RSA Encryption");
+        fprintf(dbgout, "SHA3-384 with RSA Encryption");
         break;
 
         case KMIP_DIGITAL_SHA3_512_WITH_RSA:
-        printf("SHA3-512 with RSA Encryption");
+        fprintf(dbgout, "SHA3-512 with RSA Encryption");
         break;
 
         default:
-        printf("Unknown");
+        fprintf(dbgout, "Unknown");
         break;
     };
 }
@@ -3316,18 +3341,18 @@ kmip_print_mask_generator_enum(enum mask_generator value)
 {
     if(value == 0)
     {
-        printf("-");
+        fprintf(dbgout, "-");
         return;
     }
 
     switch(value)
     {
         case KMIP_MASKGEN_MGF1:
-        printf("MGF1");
+        fprintf(dbgout, "MGF1");
         break;
 
         default:
-        printf("Unknown");
+        fprintf(dbgout, "Unknown");
         break;
     };
 }
@@ -3337,34 +3362,34 @@ kmip_print_wrapping_method_enum(enum wrapping_method value)
 {
     if(value == 0)
     {
-        printf("-");
+        fprintf(dbgout, "-");
         return;
     }
 
     switch(value)
     {
         case KMIP_WRAP_ENCRYPT:
-        printf("Encrypt");
+        fprintf(dbgout, "Encrypt");
         break;
 
         case KMIP_WRAP_MAC_SIGN:
-        printf("MAC/sign");
+        fprintf(dbgout, "MAC/sign");
         break;
 
         case KMIP_WRAP_ENCRYPT_MAC_SIGN:
-        printf("Encrypt then MAC/sign");
+        fprintf(dbgout, "Encrypt then MAC/sign");
         break;
 
         case KMIP_WRAP_MAC_SIGN_ENCRYPT:
-        printf("MAC/sign then encrypt");
+        fprintf(dbgout, "MAC/sign then encrypt");
         break;
 
         case KMIP_WRAP_TR31:
-        printf("TR-31");
+        fprintf(dbgout, "TR-31");
         break;
 
         default:
-        printf("Unknown");
+        fprintf(dbgout, "Unknown");
         break;
     };
 }
@@ -3374,22 +3399,22 @@ kmip_print_encoding_option_enum(enum encoding_option value)
 {
     if(value == 0)
     {
-        printf("-");
+        fprintf(dbgout, "-");
         return;
     }
 
     switch(value)
     {
         case KMIP_ENCODE_NO_ENCODING:
-        printf("No Encoding");
+        fprintf(dbgout, "No Encoding");
         break;
 
         case KMIP_ENCODE_TTLV_ENCODING:
-        printf("TTLV Encoding");
+        fprintf(dbgout, "TTLV Encoding");
         break;
 
         default:
-        printf("Unknown");
+        fprintf(dbgout, "Unknown");
         break;
     };
 }
@@ -3399,22 +3424,22 @@ kmip_print_key_wrap_type_enum(enum key_wrap_type value)
 {
     if(value == 0)
     {
-        printf("-");
+        fprintf(dbgout, "-");
         return;
     }
 
     switch(value)
     {
         case KMIP_WRAPTYPE_NOT_WRAPPED:
-        printf("Not Wrapped");
+        fprintf(dbgout, "Not Wrapped");
         break;
 
         case KMIP_WRAPTYPE_AS_REGISTERED:
-        printf("As Registered");
+        fprintf(dbgout, "As Registered");
         break;
 
         default:
-        printf("Unknown");
+        fprintf(dbgout, "Unknown");
         break;
     };
 }
@@ -3424,38 +3449,38 @@ kmip_print_credential_type_enum(enum credential_type value)
 {
     if(value == 0)
     {
-        printf("-");
+        fprintf(dbgout, "-");
         return;
     }
 
     switch(value)
     {
         case KMIP_CRED_USERNAME_AND_PASSWORD:
-        printf("Username and Password");
+        fprintf(dbgout, "Username and Password");
         break;
 
         case KMIP_CRED_DEVICE:
-        printf("Device");
+        fprintf(dbgout, "Device");
         break;
 
         case KMIP_CRED_ATTESTATION:
-        printf("Attestation");
+        fprintf(dbgout, "Attestation");
         break;
 
         case KMIP_CRED_ONE_TIME_PASSWORD:
-        printf("One Time Password");
+        fprintf(dbgout, "One Time Password");
         break;
 
         case KMIP_CRED_HASHED_PASSWORD:
-        printf("Hashed Password");
+        fprintf(dbgout, "Hashed Password");
         break;
 
         case KMIP_CRED_TICKET:
-        printf("Ticket");
+        fprintf(dbgout, "Ticket");
         break;
 
         default:
-        printf("Unknown");
+        fprintf(dbgout, "Unknown");
         break;
     };
 }
@@ -3463,218 +3488,218 @@ kmip_print_credential_type_enum(enum credential_type value)
 void
 kmip_print_cryptographic_usage_mask_enums(int indent, int32 value)
 {
-    printf("\n");
+    fprintf(dbgout, "\n");
 
     if((value & KMIP_CRYPTOMASK_SIGN) == KMIP_CRYPTOMASK_SIGN)
     {
-        printf("%*sSign\n", indent, "");
+        fprintf(dbgout, "%*sSign\n", indent, "");
     }
 
     if((value & KMIP_CRYPTOMASK_VERIFY) == KMIP_CRYPTOMASK_VERIFY)
     {
-        printf("%*sVerify\n", indent, "");
+        fprintf(dbgout, "%*sVerify\n", indent, "");
     }
 
     if((value & KMIP_CRYPTOMASK_ENCRYPT) == KMIP_CRYPTOMASK_ENCRYPT)
     {
-        printf("%*sEncrypt\n", indent, "");
+        fprintf(dbgout, "%*sEncrypt\n", indent, "");
     }
 
     if((value & KMIP_CRYPTOMASK_DECRYPT) == KMIP_CRYPTOMASK_DECRYPT)
     {
-        printf("%*sDecrypt\n", indent, "");
+        fprintf(dbgout, "%*sDecrypt\n", indent, "");
     }
 
     if((value & KMIP_CRYPTOMASK_WRAP_KEY) == KMIP_CRYPTOMASK_WRAP_KEY)
     {
-        printf("%*sWrap Key\n", indent, "");
+        fprintf(dbgout, "%*sWrap Key\n", indent, "");
     }
 
     if((value & KMIP_CRYPTOMASK_UNWRAP_KEY) == KMIP_CRYPTOMASK_UNWRAP_KEY)
     {
-        printf("%*sUnwrap Key\n", indent, "");
+        fprintf(dbgout, "%*sUnwrap Key\n", indent, "");
     }
 
     if((value & KMIP_CRYPTOMASK_EXPORT) == KMIP_CRYPTOMASK_EXPORT)
     {
-        printf("%*sExport\n", indent, "");
+        fprintf(dbgout, "%*sExport\n", indent, "");
     }
 
     if((value & KMIP_CRYPTOMASK_MAC_GENERATE) == KMIP_CRYPTOMASK_MAC_GENERATE)
     {
-        printf("%*sMAC Generate\n", indent, "");
+        fprintf(dbgout, "%*sMAC Generate\n", indent, "");
     }
 
     if((value & KMIP_CRYPTOMASK_MAC_VERIFY) == KMIP_CRYPTOMASK_MAC_VERIFY)
     {
-        printf("%*sMAC Verify\n", indent, "");
+        fprintf(dbgout, "%*sMAC Verify\n", indent, "");
     }
 
     if((value & KMIP_CRYPTOMASK_DERIVE_KEY) == KMIP_CRYPTOMASK_DERIVE_KEY)
     {
-        printf("%*sDerive Key\n", indent, "");
+        fprintf(dbgout, "%*sDerive Key\n", indent, "");
     }
 
     if((value & KMIP_CRYPTOMASK_CONTENT_COMMITMENT) == KMIP_CRYPTOMASK_CONTENT_COMMITMENT)
     {
-        printf("%*sContent Commitment\n", indent, "");
+        fprintf(dbgout, "%*sContent Commitment\n", indent, "");
     }
 
     if((value & KMIP_CRYPTOMASK_KEY_AGREEMENT) == KMIP_CRYPTOMASK_KEY_AGREEMENT)
     {
-        printf("%*sKey Agreement\n", indent, "");
+        fprintf(dbgout, "%*sKey Agreement\n", indent, "");
     }
 
     if((value & KMIP_CRYPTOMASK_CERTIFICATE_SIGN) == KMIP_CRYPTOMASK_CERTIFICATE_SIGN)
     {
-        printf("%*sCertificate Sign\n", indent, "");
+        fprintf(dbgout, "%*sCertificate Sign\n", indent, "");
     }
 
     if((value & KMIP_CRYPTOMASK_CRL_SIGN) == KMIP_CRYPTOMASK_CRL_SIGN)
     {
-        printf("%*sCRL Sign\n", indent, "");
+        fprintf(dbgout, "%*sCRL Sign\n", indent, "");
     }
 
     if((value & KMIP_CRYPTOMASK_GENERATE_CRYPTOGRAM) == KMIP_CRYPTOMASK_GENERATE_CRYPTOGRAM)
     {
-        printf("%*sGenerate Cryptogram\n", indent, "");
+        fprintf(dbgout, "%*sGenerate Cryptogram\n", indent, "");
     }
 
     if((value & KMIP_CRYPTOMASK_VALIDATE_CRYPTOGRAM) == KMIP_CRYPTOMASK_VALIDATE_CRYPTOGRAM)
     {
-        printf("%*sValidate Cryptogram\n", indent, "");
+        fprintf(dbgout, "%*sValidate Cryptogram\n", indent, "");
     }
 
     if((value & KMIP_CRYPTOMASK_TRANSLATE_ENCRYPT) == KMIP_CRYPTOMASK_TRANSLATE_ENCRYPT)
     {
-        printf("%*sTranslate Encrypt\n", indent, "");
+        fprintf(dbgout, "%*sTranslate Encrypt\n", indent, "");
     }
 
     if((value & KMIP_CRYPTOMASK_TRANSLATE_DECRYPT) == KMIP_CRYPTOMASK_TRANSLATE_DECRYPT)
     {
-        printf("%*sTranslate Decrypt\n", indent, "");
+        fprintf(dbgout, "%*sTranslate Decrypt\n", indent, "");
     }
 
     if((value & KMIP_CRYPTOMASK_TRANSLATE_WRAP) == KMIP_CRYPTOMASK_TRANSLATE_WRAP)
     {
-        printf("%*sTranslate Wrap\n", indent, "");
+        fprintf(dbgout, "%*sTranslate Wrap\n", indent, "");
     }
 
     if((value & KMIP_CRYPTOMASK_TRANSLATE_UNWRAP) == KMIP_CRYPTOMASK_TRANSLATE_UNWRAP)
     {
-        printf("%*sTranslate Unwrap\n", indent, "");
+        fprintf(dbgout, "%*sTranslate Unwrap\n", indent, "");
     }
 
     if((value & KMIP_CRYPTOMASK_AUTHENTICATE) == KMIP_CRYPTOMASK_AUTHENTICATE)
     {
-        printf("%*sAuthenticate\n", indent, "");
+        fprintf(dbgout, "%*sAuthenticate\n", indent, "");
     }
 
     if((value & KMIP_CRYPTOMASK_UNRESTRICTED) == KMIP_CRYPTOMASK_UNRESTRICTED)
     {
-        printf("%*sUnrestricted\n", indent, "");
+        fprintf(dbgout, "%*sUnrestricted\n", indent, "");
     }
 
     if((value & KMIP_CRYPTOMASK_FPE_ENCRYPT) == KMIP_CRYPTOMASK_FPE_ENCRYPT)
     {
-        printf("%*sFPE Encrypt\n", indent, "");
+        fprintf(dbgout, "%*sFPE Encrypt\n", indent, "");
     }
 
     if((value & KMIP_CRYPTOMASK_FPE_DECRYPT) == KMIP_CRYPTOMASK_FPE_DECRYPT)
     {
-        printf("%*sFPE Decrypt\n", indent, "");
+        fprintf(dbgout, "%*sFPE Decrypt\n", indent, "");
     }
 }
 
 void
 kmip_print_protection_storage_mask_enum(int indent, int32 value)
 {
-    printf("\n");
+    fprintf(dbgout, "\n");
 
     if((value & KMIP_PROTECT_SOFTWARE) == KMIP_PROTECT_SOFTWARE)
     {
-        printf("%*sSoftware\n", indent, "");
+        fprintf(dbgout, "%*sSoftware\n", indent, "");
     }
 
     if((value & KMIP_PROTECT_HARDWARE) == KMIP_PROTECT_HARDWARE)
     {
-        printf("%*sHardware\n", indent, "");
+        fprintf(dbgout, "%*sHardware\n", indent, "");
     }
 
     if((value & KMIP_PROTECT_ON_PROCESSOR) == KMIP_PROTECT_ON_PROCESSOR)
     {
-        printf("%*sOn Processor\n", indent, "");
+        fprintf(dbgout, "%*sOn Processor\n", indent, "");
     }
 
     if((value & KMIP_PROTECT_ON_SYSTEM) == KMIP_PROTECT_ON_SYSTEM)
     {
-        printf("%*sOn System\n", indent, "");
+        fprintf(dbgout, "%*sOn System\n", indent, "");
     }
 
     if((value & KMIP_PROTECT_OFF_SYSTEM) == KMIP_PROTECT_OFF_SYSTEM)
     {
-        printf("%*sOff System\n", indent, "");
+        fprintf(dbgout, "%*sOff System\n", indent, "");
     }
 
     if((value & KMIP_PROTECT_HYPERVISOR) == KMIP_PROTECT_HYPERVISOR)
     {
-        printf("%*sHypervisor\n", indent, "");
+        fprintf(dbgout, "%*sHypervisor\n", indent, "");
     }
 
     if((value & KMIP_PROTECT_OPERATING_SYSTEM) == KMIP_PROTECT_OPERATING_SYSTEM)
     {
-        printf("%*sOperating System\n", indent, "");
+        fprintf(dbgout, "%*sOperating System\n", indent, "");
     }
 
     if((value & KMIP_PROTECT_CONTAINER) == KMIP_PROTECT_CONTAINER)
     {
-        printf("%*sContainer\n", indent, "");
+        fprintf(dbgout, "%*sContainer\n", indent, "");
     }
 
     if((value & KMIP_PROTECT_ON_PREMISES) == KMIP_PROTECT_ON_PREMISES)
     {
-        printf("%*sOn Premises\n", indent, "");
+        fprintf(dbgout, "%*sOn Premises\n", indent, "");
     }
 
     if((value & KMIP_PROTECT_OFF_PREMISES) == KMIP_PROTECT_OFF_PREMISES)
     {
-        printf("%*sOff Premises\n", indent, "");
+        fprintf(dbgout, "%*sOff Premises\n", indent, "");
     }
 
     if((value & KMIP_PROTECT_SELF_MANAGED) == KMIP_PROTECT_SELF_MANAGED)
     {
-        printf("%*sSelf Managed\n", indent, "");
+        fprintf(dbgout, "%*sSelf Managed\n", indent, "");
     }
 
     if((value & KMIP_PROTECT_OUTSOURCED) == KMIP_PROTECT_OUTSOURCED)
     {
-        printf("%*sOutsourced\n", indent, "");
+        fprintf(dbgout, "%*sOutsourced\n", indent, "");
     }
 
     if((value & KMIP_PROTECT_VALIDATED) == KMIP_PROTECT_VALIDATED)
     {
-        printf("%*sValidated\n", indent, "");
+        fprintf(dbgout, "%*sValidated\n", indent, "");
     }
 
     if((value & KMIP_PROTECT_SAME_JURISDICTION) == KMIP_PROTECT_SAME_JURISDICTION)
     {
-        printf("%*sSame Jurisdiction\n", indent, "");
+        fprintf(dbgout, "%*sSame Jurisdiction\n", indent, "");
     }
 }
 
 void
 kmip_print_protection_storage_masks(int indent, ProtectionStorageMasks *value)
 {
-    printf("%*sProtection Storage Masks @ %p\n", indent, "", (void *)value);
+    fprintf(dbgout, "%*sProtection Storage Masks @ %p\n", indent, "", (void *)value);
 
     if(value != NULL)
     {
-        printf("%*sMasks: %zu\n", indent + 2, "", value->masks->size);
+        fprintf(dbgout, "%*sMasks: %zu\n", indent + 2, "", value->masks->size);
         LinkedListItem *curr = value->masks->head;
         size_t count = 1;
         while(curr != NULL)
         {
-            printf("%*sMask: %zu", indent + 4, "", count);
+            fprintf(dbgout, "%*sMask: %zu", indent + 4, "", count);
             int32 mask = *(int32 *)curr->data;
             kmip_print_protection_storage_mask_enum(indent + 6, mask);
 
@@ -3690,11 +3715,11 @@ kmip_print_integer(int32 value)
     switch(value)
     {
         case KMIP_UNSET:
-        printf("-");
+        fprintf(dbgout, "-");
         break;
 
         default:
-        printf("%d", value);
+        fprintf(dbgout, "%d", value);
         break;
     };
 }
@@ -3705,15 +3730,15 @@ kmip_print_bool(int32 value)
     switch(value)
     {
         case KMIP_TRUE:
-        printf("True");
+        fprintf(dbgout, "True");
         break;
 
         case KMIP_FALSE:
-        printf("False");
+        fprintf(dbgout, "False");
         break;
 
         default:
-        printf("-");
+        fprintf(dbgout, "-");
         break;
     };
 }
@@ -3721,11 +3746,11 @@ kmip_print_bool(int32 value)
 void
 kmip_print_text_string(int indent, const char *name, TextString *value)
 {
-    printf("%*s%s @ %p\n", indent, "", name, (void *)value);
+    fprintf(dbgout, "%*s%s @ %p\n", indent, "", name, (void *)value);
 
     if(value != NULL)
     {
-        printf("%*sValue: %.*s\n", indent + 2, "", (int)value->size, value->value);
+        fprintf(dbgout, "%*sValue: %.*s\n", indent + 2, "", (int)value->size, value->value);
     }
 
     return;
@@ -3734,20 +3759,20 @@ kmip_print_text_string(int indent, const char *name, TextString *value)
 void
 kmip_print_byte_string(int indent, const char *name, ByteString *value)
 {
-    printf("%*s%s @ %p\n", indent, "", name, (void *)value);
+    fprintf(dbgout, "%*s%s @ %p\n", indent, "", name, (void *)value);
 
     if(value != NULL)
     {
-        printf("%*sValue:", indent + 2, "");
+        fprintf(dbgout, "%*sValue:", indent + 2, "");
         for(size_t i = 0; i < value->size; i++)
         {
             if(i % 16 == 0)
             {
-                printf("\n%*s0x", indent + 4, "");
+                fprintf(dbgout, "\n%*s0x", indent + 4, "");
             }
-            printf("%02X", value->value[i]);
+            fprintf(dbgout, "%02X", value->value[i]);
         }
-        printf("\n");
+        fprintf(dbgout, "\n");
     }
 
     return;
@@ -3756,12 +3781,12 @@ kmip_print_byte_string(int indent, const char *name, ByteString *value)
 void
 kmip_print_protocol_version(int indent, ProtocolVersion *value)
 {
-    printf("%*sProtocol Version @ %p\n", indent, "", (void *)value);
+    fprintf(dbgout, "%*sProtocol Version @ %p\n", indent, "", (void *)value);
 
     if(value != NULL)
     {
-        printf("%*sMajor: %d\n", indent + 2, "", value->major);
-        printf("%*sMinor: %d\n", indent + 2, "", value->minor);
+        fprintf(dbgout, "%*sMajor: %d\n", indent + 2, "", value->major);
+        fprintf(dbgout, "%*sMinor: %d\n", indent + 2, "", value->minor);
     }
 
     return;
@@ -3770,22 +3795,22 @@ kmip_print_protocol_version(int indent, ProtocolVersion *value)
 void
 kmip_print_name(int indent, Name *value)
 {
-    printf("%*sName @ %p\n", indent, "", (void *)value);
+    fprintf(dbgout, "%*sName @ %p\n", indent, "", (void *)value);
 
     if(value != NULL)
     {
         kmip_print_text_string(indent + 2, "Name Value", value->value);
 
-        printf("%*sName Type: ", indent + 2, "");
+        fprintf(dbgout, "%*sName Type: ", indent + 2, "");
         kmip_print_name_type_enum(value->type);
-        printf("\n");
+        fprintf(dbgout, "\n");
     }
 }
 
 void
 kmip_print_nonce(int indent, Nonce *value)
 {
-    printf("%*sNonce @ %p\n", indent, "", (void *)value);
+    fprintf(dbgout, "%*sNonce @ %p\n", indent, "", (void *)value);
 
     if(value != NULL)
     {
@@ -3799,7 +3824,7 @@ kmip_print_nonce(int indent, Nonce *value)
 void
 kmip_print_application_specific_information(int indent, ApplicationSpecificInformation *value)
 {
-    printf("%*sApplication Specific Information @ %p\n", indent, "", (void *)value);
+    fprintf(dbgout, "%*sApplication Specific Information @ %p\n", indent, "", (void *)value);
 
     if(value != NULL)
     {
@@ -3811,86 +3836,86 @@ kmip_print_application_specific_information(int indent, ApplicationSpecificInfor
 void
 kmip_print_cryptographic_parameters(int indent, CryptographicParameters *value)
 {
-    printf("%*sCryptographic Parameters @ %p\n", indent, "", (void *)value);
+    fprintf(dbgout, "%*sCryptographic Parameters @ %p\n", indent, "", (void *)value);
 
     if(value != NULL)
     {
-        printf("%*sBlock Cipher Mode: ", indent + 2, "");
+        fprintf(dbgout, "%*sBlock Cipher Mode: ", indent + 2, "");
         kmip_print_block_cipher_mode_enum(value->block_cipher_mode);
-        printf("\n");
+        fprintf(dbgout, "\n");
 
-        printf("%*sPadding Method: ", indent + 2, "");
+        fprintf(dbgout, "%*sPadding Method: ", indent + 2, "");
         kmip_print_padding_method_enum(value->padding_method);
-        printf("\n");
+        fprintf(dbgout, "\n");
 
-        printf("%*sHashing Algorithm: ", indent + 2, "");
+        fprintf(dbgout, "%*sHashing Algorithm: ", indent + 2, "");
         kmip_print_hashing_algorithm_enum(value->hashing_algorithm);
-        printf("\n");
+        fprintf(dbgout, "\n");
 
-        printf("%*sKey Role Type: ", indent + 2, "");
+        fprintf(dbgout, "%*sKey Role Type: ", indent + 2, "");
         kmip_print_key_role_type_enum(value->key_role_type);
-        printf("\n");
+        fprintf(dbgout, "\n");
 
-        printf("%*sDigital Signature Algorithm: ", indent + 2, "");
+        fprintf(dbgout, "%*sDigital Signature Algorithm: ", indent + 2, "");
         kmip_print_digital_signature_algorithm_enum(value->digital_signature_algorithm);
-        printf("\n");
+        fprintf(dbgout, "\n");
 
-        printf("%*sCryptographic Algorithm: ", indent + 2, "");
+        fprintf(dbgout, "%*sCryptographic Algorithm: ", indent + 2, "");
         kmip_print_cryptographic_algorithm_enum(value->cryptographic_algorithm);
-        printf("\n");
+        fprintf(dbgout, "\n");
 
-        printf("%*sRandom IV: ", indent + 2, "");
+        fprintf(dbgout, "%*sRandom IV: ", indent + 2, "");
         kmip_print_bool(value->random_iv);
-        printf("\n");
+        fprintf(dbgout, "\n");
 
-        printf("%*sIV Length: ", indent + 2, "");
+        fprintf(dbgout, "%*sIV Length: ", indent + 2, "");
         kmip_print_integer(value->iv_length);
-        printf("\n");
+        fprintf(dbgout, "\n");
 
-        printf("%*sTag Length: ", indent + 2, "");
+        fprintf(dbgout, "%*sTag Length: ", indent + 2, "");
         kmip_print_integer(value->tag_length);
-        printf("\n");
+        fprintf(dbgout, "\n");
 
-        printf("%*sFixed Field Length: ", indent + 2, "");
+        fprintf(dbgout, "%*sFixed Field Length: ", indent + 2, "");
         kmip_print_integer(value->fixed_field_length);
-        printf("\n");
+        fprintf(dbgout, "\n");
 
-        printf("%*sInvocation Field Length: ", indent + 2, "");
+        fprintf(dbgout, "%*sInvocation Field Length: ", indent + 2, "");
         kmip_print_integer(value->invocation_field_length);
-        printf("\n");
+        fprintf(dbgout, "\n");
 
-        printf("%*sCounter Length: ", indent + 2, "");
+        fprintf(dbgout, "%*sCounter Length: ", indent + 2, "");
         kmip_print_integer(value->counter_length);
-        printf("\n");
+        fprintf(dbgout, "\n");
 
-        printf("%*sInitial Counter Value: ", indent + 2, "");
+        fprintf(dbgout, "%*sInitial Counter Value: ", indent + 2, "");
         kmip_print_integer(value->initial_counter_value);
-        printf("\n");
+        fprintf(dbgout, "\n");
 
-        printf("%*sSalt Length: ", indent + 2, "");
+        fprintf(dbgout, "%*sSalt Length: ", indent + 2, "");
         kmip_print_integer(value->salt_length);
-        printf("\n");
+        fprintf(dbgout, "\n");
 
-        printf("%*sMask Generator: ", indent + 2, "");
+        fprintf(dbgout, "%*sMask Generator: ", indent + 2, "");
         kmip_print_mask_generator_enum(value->mask_generator);
-        printf("\n");
+        fprintf(dbgout, "\n");
 
-        printf("%*sMask Generator Hashing Algorithm: ", indent + 2, "");
+        fprintf(dbgout, "%*sMask Generator Hashing Algorithm: ", indent + 2, "");
         kmip_print_hashing_algorithm_enum(value->mask_generator_hashing_algorithm);
-        printf("\n");
+        fprintf(dbgout, "\n");
 
         kmip_print_byte_string(indent + 2, "P Source", value->p_source);
 
-        printf("%*sTrailer Field: ", indent + 2, "");
+        fprintf(dbgout, "%*sTrailer Field: ", indent + 2, "");
         kmip_print_integer(value->trailer_field);
-        printf("\n");
+        fprintf(dbgout, "\n");
     }
 }
 
 void
 kmip_print_encryption_key_information(int indent, EncryptionKeyInformation *value)
 {
-    printf("%*sEncryption Key Information @ %p\n", indent, "", (void *)value);
+    fprintf(dbgout, "%*sEncryption Key Information @ %p\n", indent, "", (void *)value);
 
     if(value != NULL)
     {
@@ -3903,7 +3928,7 @@ kmip_print_encryption_key_information(int indent, EncryptionKeyInformation *valu
 void
 kmip_print_mac_signature_key_information(int indent, MACSignatureKeyInformation *value)
 {
-    printf("%*sMAC/Signature Key Information @ %p\n", indent, "", (void *)value);
+    fprintf(dbgout, "%*sMAC/Signature Key Information @ %p\n", indent, "", (void *)value);
 
     if(value != NULL)
     {
@@ -3916,13 +3941,13 @@ kmip_print_mac_signature_key_information(int indent, MACSignatureKeyInformation 
 void
 kmip_print_key_wrapping_data(int indent, KeyWrappingData *value)
 {
-    printf("%*sKey Wrapping Data @ %p\n", indent, "", (void *)value);
+    fprintf(dbgout, "%*sKey Wrapping Data @ %p\n", indent, "", (void *)value);
 
     if(value != NULL)
     {
-        printf("%*sWrapping Method: ", indent + 2, "");
+        fprintf(dbgout, "%*sWrapping Method: ", indent + 2, "");
         kmip_print_wrapping_method_enum(value->wrapping_method);
-        printf("\n");
+        fprintf(dbgout, "\n");
 
         kmip_print_encryption_key_information(indent + 2, value->encryption_key_info);
 
@@ -3932,9 +3957,9 @@ kmip_print_key_wrapping_data(int indent, KeyWrappingData *value)
 
         kmip_print_byte_string(indent + 2, "IV/Counter/Nonce", value->iv_counter_nonce);
 
-        printf("%*sEncoding Option: ", indent + 2, "");
+        fprintf(dbgout, "%*sEncoding Option: ", indent + 2, "");
         kmip_print_encoding_option_enum(value->encoding_option);
-        printf("\n");
+        fprintf(dbgout, "\n");
     }
 
     return;
@@ -3943,43 +3968,43 @@ kmip_print_key_wrapping_data(int indent, KeyWrappingData *value)
 void
 kmip_print_attribute_value(int indent, enum attribute_type type, void *value)
 {
-    printf("%*sAttribute Value: ", indent, "");
+    fprintf(dbgout, "%*sAttribute Value: ", indent, "");
 
     switch(type)
     {
         case KMIP_ATTR_APPLICATION_SPECIFIC_INFORMATION:
         {
-            printf("\n");
+            fprintf(dbgout, "\n");
             kmip_print_application_specific_information(indent + 2, value);
         }
         break;
 
         case KMIP_ATTR_UNIQUE_IDENTIFIER:
-        printf("\n");
+        fprintf(dbgout, "\n");
         kmip_print_text_string(indent + 2, "Unique Identifier", value);
         break;
 
         case KMIP_ATTR_NAME:
-        printf("\n");
+        fprintf(dbgout, "\n");
         kmip_print_name(indent + 2, value);
         break;
 
         case KMIP_ATTR_OBJECT_TYPE:
         kmip_print_object_type_enum(*(enum object_type *)value);
-        printf("\n");
+        fprintf(dbgout, "\n");
         break;
 
         case KMIP_ATTR_CRYPTOGRAPHIC_ALGORITHM:
         kmip_print_cryptographic_algorithm_enum(*(enum cryptographic_algorithm *)value);
-        printf("\n");
+        fprintf(dbgout, "\n");
         break;
 
         case KMIP_ATTR_CRYPTOGRAPHIC_LENGTH:
-        printf("%d\n", *(int32 *)value);
+        fprintf(dbgout, "%d\n", *(int32 *)value);
         break;
 
         case KMIP_ATTR_OPERATION_POLICY_NAME:
-        printf("\n");
+        fprintf(dbgout, "\n");
         kmip_print_text_string(indent + 2, "Operation Policy Name", value);
         break;
 
@@ -3989,11 +4014,11 @@ kmip_print_attribute_value(int indent, enum attribute_type type, void *value)
 
         case KMIP_ATTR_STATE:
         kmip_print_state_enum(*(enum state *)value);
-        printf("\n");
+        fprintf(dbgout, "\n");
         break;
 
         default:
-        printf("Unknown\n");
+        fprintf(dbgout, "Unknown\n");
         break;
     };
 }
@@ -4001,17 +4026,17 @@ kmip_print_attribute_value(int indent, enum attribute_type type, void *value)
 void
 kmip_print_attribute(int indent, Attribute *value)
 {
-    printf("%*sAttribute @ %p\n", indent, "", (void *)value);
+    fprintf(dbgout, "%*sAttribute @ %p\n", indent, "", (void *)value);
 
     if(value != NULL)
     {
-        printf("%*sAttribute Name: ", indent + 2, "");
+        fprintf(dbgout, "%*sAttribute Name: ", indent + 2, "");
         kmip_print_attribute_type_enum(value->type);
-        printf("\n");
+        fprintf(dbgout, "\n");
 
-        printf("%*sAttribute Index: ", indent + 2, "");
+        fprintf(dbgout, "%*sAttribute Index: ", indent + 2, "");
         kmip_print_integer(value->index);
-        printf("\n");
+        fprintf(dbgout, "\n");
 
         kmip_print_attribute_value(indent + 2, value->type, value->value);
     }
@@ -4034,7 +4059,7 @@ kmip_print_key_material(int indent, enum key_format_type format, void *value)
         break;
 
         default:
-        printf("%*sUnknown Key Material @ %p\n", indent, "", value);
+        fprintf(dbgout, "%*sUnknown Key Material @ %p\n", indent, "", value);
         break;
     };
 }
@@ -4049,13 +4074,13 @@ kmip_print_key_value(int indent, enum type type, enum key_format_type format, vo
         break;
 
         case KMIP_TYPE_STRUCTURE:
-        printf("%*sKey Value @ %p\n", indent, "", value);
+        fprintf(dbgout, "%*sKey Value @ %p\n", indent, "", value);
 
         if(value != NULL)
         {
             KeyValue key_value = *(KeyValue *)value;
             kmip_print_key_material(indent + 2, format, key_value.key_material);
-            printf("%*sAttributes: %zu\n", indent + 2, "", key_value.attribute_count);
+            fprintf(dbgout, "%*sAttributes: %zu\n", indent + 2, "", key_value.attribute_count);
             for(size_t i = 0; i < key_value.attribute_count; i++)
             {
                 kmip_print_attribute(indent + 2, &key_value.attributes[i]);
@@ -4064,7 +4089,7 @@ kmip_print_key_value(int indent, enum type type, enum key_format_type format, vo
         break;
 
         default:
-        printf("%*sUnknown Key Value @ %p\n", indent, "", value);
+        fprintf(dbgout, "%*sUnknown Key Value @ %p\n", indent, "", value);
         break;
     };
 }
@@ -4072,25 +4097,25 @@ kmip_print_key_value(int indent, enum type type, enum key_format_type format, vo
 void
 kmip_print_key_block(int indent, KeyBlock *value)
 {
-    printf("%*sKey Block @ %p\n", indent, "", (void *)value);
+    fprintf(dbgout, "%*sKey Block @ %p\n", indent, "", (void *)value);
 
     if(value != NULL)
     {
-        printf("%*sKey Format Type: ", indent + 2, "");
+        fprintf(dbgout, "%*sKey Format Type: ", indent + 2, "");
         kmip_print_key_format_type_enum(value->key_format_type);
-        printf("\n");
+        fprintf(dbgout, "\n");
 
-        printf("%*sKey Compression Type: ", indent + 2, "");
+        fprintf(dbgout, "%*sKey Compression Type: ", indent + 2, "");
         kmip_print_key_compression_type_enum(value->key_compression_type);
-        printf("\n");
+        fprintf(dbgout, "\n");
 
         kmip_print_key_value(indent + 2, value->key_value_type, value->key_format_type, value->key_value);
 
-        printf("%*sCryptographic Algorithm: ", indent + 2, "");
+        fprintf(dbgout, "%*sCryptographic Algorithm: ", indent + 2, "");
         kmip_print_cryptographic_algorithm_enum(value->cryptographic_algorithm);
-        printf("\n");
+        fprintf(dbgout, "\n");
 
-        printf("%*sCryptographic Length: %d\n", indent + 2, "", value->cryptographic_length);
+        fprintf(dbgout, "%*sCryptographic Length: %d\n", indent + 2, "", value->cryptographic_length);
 
         kmip_print_key_wrapping_data(indent + 2, value->key_wrapping_data);
     }
@@ -4101,7 +4126,7 @@ kmip_print_key_block(int indent, KeyBlock *value)
 void
 kmip_print_symmetric_key(int indent, SymmetricKey *value)
 {
-    printf("%*sSymmetric Key @ %p\n", indent, "", (void *)value);
+    fprintf(dbgout, "%*sSymmetric Key @ %p\n", indent, "", (void *)value);
 
     if(value != NULL)
     {
@@ -4121,7 +4146,7 @@ kmip_print_object(int indent, enum object_type type, void *value)
         break;
 
         default:
-        printf("%*sUnknown Object @ %p\n", indent, "", value);
+        fprintf(dbgout, "%*sUnknown Object @ %p\n", indent, "", value);
         break;
     };
 }
@@ -4129,17 +4154,17 @@ kmip_print_object(int indent, enum object_type type, void *value)
 void
 kmip_print_key_wrapping_specification(int indent, KeyWrappingSpecification *value)
 {
-    printf("%*sKey Wrapping Specification @ %p\n", indent, "", (void *)value);
+    fprintf(dbgout, "%*sKey Wrapping Specification @ %p\n", indent, "", (void *)value);
 }
 
 void
 kmip_print_attributes(int indent, Attributes *value)
 {
-    printf("%*sAttributes @ %p\n", indent, "", (void *)value);
+    fprintf(dbgout, "%*sAttributes @ %p\n", indent, "", (void *)value);
 
     if(value != NULL)
     {
-        printf("%*sAttributes: %zu\n", indent + 2, "", value->attribute_list->size);
+        fprintf(dbgout, "%*sAttributes: %zu\n", indent + 2, "", value->attribute_list->size);
         LinkedListItem *curr = value->attribute_list->head;
         while(curr != NULL)
         {
@@ -4154,17 +4179,17 @@ kmip_print_attributes(int indent, Attributes *value)
 void
 kmip_print_template_attribute(int indent, TemplateAttribute *value)
 {
-    printf("%*sTemplate Attribute @ %p\n", indent, "", (void *)value);
+    fprintf(dbgout, "%*sTemplate Attribute @ %p\n", indent, "", (void *)value);
 
     if(value != NULL)
     {
-        printf("%*sNames: %zu\n", indent + 2, "", value->name_count);
+        fprintf(dbgout, "%*sNames: %zu\n", indent + 2, "", value->name_count);
         for(size_t i = 0; i < value->name_count; i++)
         {
             kmip_print_name(indent + 4, &value->names[i]);
         }
 
-        printf("%*sAttributes: %zu\n", indent + 2, "", value->attribute_count);
+        fprintf(dbgout, "%*sAttributes: %zu\n", indent + 2, "", value->attribute_count);
         for(size_t i = 0; i< value->attribute_count; i++)
         {
             kmip_print_attribute(indent + 4, &value->attributes[i]);
@@ -4175,13 +4200,13 @@ kmip_print_template_attribute(int indent, TemplateAttribute *value)
 void
 kmip_print_create_request_payload(int indent, CreateRequestPayload *value)
 {
-    printf("%*sCreate Request Payload @ %p\n", indent, "", (void *)value);
+    fprintf(dbgout, "%*sCreate Request Payload @ %p\n", indent, "", (void *)value);
 
     if(value != NULL)
     {
-        printf("%*sObject Type: ", indent + 2, "");
+        fprintf(dbgout, "%*sObject Type: ", indent + 2, "");
         kmip_print_object_type_enum(value->object_type);
-        printf("\n");
+        fprintf(dbgout, "\n");
 
         kmip_print_template_attribute(indent + 2, value->template_attribute);
         kmip_print_attributes(indent + 2, value->attributes);
@@ -4192,13 +4217,13 @@ kmip_print_create_request_payload(int indent, CreateRequestPayload *value)
 void
 kmip_print_create_response_payload(int indent, CreateResponsePayload *value)
 {
-    printf("%*sCreate Response Payload @ %p\n", indent, "", (void *)value);
+    fprintf(dbgout, "%*sCreate Response Payload @ %p\n", indent, "", (void *)value);
 
     if(value != NULL)
     {
-        printf("%*sObject Type: ", indent + 2, "");
+        fprintf(dbgout, "%*sObject Type: ", indent + 2, "");
         kmip_print_object_type_enum(value->object_type);
-        printf("\n");
+        fprintf(dbgout, "\n");
 
         kmip_print_text_string(
             indent + 2,
@@ -4212,7 +4237,7 @@ kmip_print_create_response_payload(int indent, CreateResponsePayload *value)
 void
 kmip_print_get_request_payload(int indent, GetRequestPayload *value)
 {
-    printf("%*sGet Request Payload @ %p\n", indent, "", (void *)value);
+    fprintf(dbgout, "%*sGet Request Payload @ %p\n", indent, "", (void *)value);
 
     if(value != NULL)
     {
@@ -4221,17 +4246,17 @@ kmip_print_get_request_payload(int indent, GetRequestPayload *value)
             "Unique Identifier",
             value->unique_identifier);
 
-        printf("%*sKey Format Type: ", indent + 2, "");
+        fprintf(dbgout, "%*sKey Format Type: ", indent + 2, "");
         kmip_print_key_format_type_enum(value->key_format_type);
-        printf("\n");
+        fprintf(dbgout, "\n");
 
-        printf("%*sKey Wrap Type: ", indent + 2, "");
+        fprintf(dbgout, "%*sKey Wrap Type: ", indent + 2, "");
         kmip_print_key_wrap_type_enum(value->key_wrap_type);
-        printf("\n");
+        fprintf(dbgout, "\n");
 
-        printf("%*sKey Compression Type: ", indent + 2, "");
+        fprintf(dbgout, "%*sKey Compression Type: ", indent + 2, "");
         kmip_print_key_compression_type_enum(value->key_compression_type);
-        printf("\n");
+        fprintf(dbgout, "\n");
 
         kmip_print_key_wrapping_specification(indent + 2, value->key_wrapping_spec);
     }
@@ -4240,13 +4265,13 @@ kmip_print_get_request_payload(int indent, GetRequestPayload *value)
 void
 kmip_print_get_response_payload(int indent, GetResponsePayload *value)
 {
-    printf("%*sGet Response Payload @ %p\n", indent, "", (void *)value);
+    fprintf(dbgout, "%*sGet Response Payload @ %p\n", indent, "", (void *)value);
 
     if(value != NULL)
     {
-        printf("%*sObject Type: ", indent + 2, "");
+        fprintf(dbgout, "%*sObject Type: ", indent + 2, "");
         kmip_print_object_type_enum(value->object_type);
-        printf("\n");
+        fprintf(dbgout, "\n");
 
         kmip_print_text_string(indent + 2, "Unique Identifier", value->unique_identifier);
         kmip_print_object(indent + 2, value->object_type, value->object);
@@ -4258,7 +4283,7 @@ kmip_print_get_response_payload(int indent, GetResponsePayload *value)
 void
 kmip_print_destroy_request_payload(int indent, DestroyRequestPayload *value)
 {
-    printf("%*sDestroy Request Payload @ %p\n", indent, "", (void *)value);
+    fprintf(dbgout, "%*sDestroy Request Payload @ %p\n", indent, "", (void *)value);
 
     if(value != NULL)
     {
@@ -4272,7 +4297,7 @@ kmip_print_destroy_request_payload(int indent, DestroyRequestPayload *value)
 void
 kmip_print_destroy_response_payload(int indent, DestroyResponsePayload *value)
 {
-    printf("%*sDestroy Response Payload @ %p\n", indent, "", (void *)value);
+    fprintf(dbgout, "%*sDestroy Response Payload @ %p\n", indent, "", (void *)value);
 
     if(value != NULL)
     {
@@ -4301,7 +4326,7 @@ kmip_print_request_payload(int indent, enum operation type, void *value)
         break;
 
         default:
-        printf("%*sUnknown Payload @ %p\n", indent, "", value);
+        fprintf(dbgout, "%*sUnknown Payload @ %p\n", indent, "", value);
         break;
     };
 }
@@ -4324,7 +4349,7 @@ kmip_print_response_payload(int indent, enum operation type, void *value)
         break;
 
         default:
-        printf("%*sUnknown Payload @ %p\n", indent, "", value);
+        fprintf(dbgout, "%*sUnknown Payload @ %p\n", indent, "", value);
         break;
     };
 }
@@ -4332,7 +4357,7 @@ kmip_print_response_payload(int indent, enum operation type, void *value)
 void
 kmip_print_username_password_credential(int indent, UsernamePasswordCredential *value)
 {
-    printf("%*sUsername/Password Credential @ %p\n", indent, "", (void *)value);
+    fprintf(dbgout, "%*sUsername/Password Credential @ %p\n", indent, "", (void *)value);
 
     if(value != NULL)
     {
@@ -4344,7 +4369,7 @@ kmip_print_username_password_credential(int indent, UsernamePasswordCredential *
 void
 kmip_print_device_credential(int indent, DeviceCredential *value)
 {
-    printf("%*sDevice Credential @ %p\n", indent, "", (void *)value);
+    fprintf(dbgout, "%*sDevice Credential @ %p\n", indent, "", (void *)value);
 
     if(value != NULL)
     {
@@ -4360,14 +4385,14 @@ kmip_print_device_credential(int indent, DeviceCredential *value)
 void
 kmip_print_attestation_credential(int indent, AttestationCredential *value)
 {
-    printf("%*sAttestation Credential @ %p\n", indent, "", (void *)value);
+    fprintf(dbgout, "%*sAttestation Credential @ %p\n", indent, "", (void *)value);
 
     if(value != NULL)
     {
         kmip_print_nonce(indent + 2, value->nonce);
-        printf("%*sAttestation Type: ", indent + 2, "");
+        fprintf(dbgout, "%*sAttestation Type: ", indent + 2, "");
         kmip_print_attestation_type_enum(value->attestation_type);
-        printf("\n");
+        fprintf(dbgout, "\n");
         kmip_print_byte_string(indent + 2, "Attestation Measurement", value->attestation_measurement);
         kmip_print_byte_string(indent + 2, "Attestation Assertion", value->attestation_assertion);
     }
@@ -4376,7 +4401,7 @@ kmip_print_attestation_credential(int indent, AttestationCredential *value)
 void
 kmip_print_credential_value(int indent, enum credential_type type, void *value)
 {
-    printf("%*sCredential Value @ %p\n", indent, "", value);
+    fprintf(dbgout, "%*sCredential Value @ %p\n", indent, "", value);
 
     if(value != NULL)
     {
@@ -4395,7 +4420,7 @@ kmip_print_credential_value(int indent, enum credential_type type, void *value)
             break;
 
             default:
-            printf("%*sUnknown Credential @ %p\n", indent + 2, "", value);
+            fprintf(dbgout, "%*sUnknown Credential @ %p\n", indent + 2, "", value);
             break;
         };
     }
@@ -4404,13 +4429,13 @@ kmip_print_credential_value(int indent, enum credential_type type, void *value)
 void
 kmip_print_credential(int indent, Credential *value)
 {
-    printf("%*sCredential @ %p\n", indent, "", (void *)value);
+    fprintf(dbgout, "%*sCredential @ %p\n", indent, "", (void *)value);
 
     if(value != NULL)
     {
-        printf("%*sCredential Type: ", indent + 2, "");
+        fprintf(dbgout, "%*sCredential Type: ", indent + 2, "");
         kmip_print_credential_type_enum(value->credential_type);
-        printf("\n");
+        fprintf(dbgout, "\n");
 
         kmip_print_credential_value(
             indent + 2,
@@ -4422,7 +4447,7 @@ kmip_print_credential(int indent, Credential *value)
 void
 kmip_print_authentication(int indent, Authentication *value)
 {
-    printf("%*sAuthentication @ %p\n", indent, "", (void *)value);
+    fprintf(dbgout, "%*sAuthentication @ %p\n", indent, "", (void *)value);
 
     if(value != NULL)
     {
@@ -4433,17 +4458,17 @@ kmip_print_authentication(int indent, Authentication *value)
 void
 kmip_print_request_batch_item(int indent, RequestBatchItem *value)
 {
-    printf("%*sRequest Batch Item @ %p\n", indent, "", (void *)value);
+    fprintf(dbgout, "%*sRequest Batch Item @ %p\n", indent, "", (void *)value);
 
     if(value != NULL)
     {
-        printf("%*sOperation: ", indent + 2, "");
+        fprintf(dbgout, "%*sOperation: ", indent + 2, "");
         kmip_print_operation_enum(value->operation);
-        printf("\n");
+        fprintf(dbgout, "\n");
 
-        printf("%*sEphemeral: ", indent + 2, "");
+        fprintf(dbgout, "%*sEphemeral: ", indent + 2, "");
         kmip_print_bool(value->ephemeral);
-        printf("\n");
+        fprintf(dbgout, "\n");
 
         kmip_print_byte_string(
             indent + 2,
@@ -4460,26 +4485,26 @@ kmip_print_request_batch_item(int indent, RequestBatchItem *value)
 void
 kmip_print_response_batch_item(int indent, ResponseBatchItem *value)
 {
-    printf("%*sResponse Batch Item @ %p\n", indent, "", (void *)value);
+    fprintf(dbgout, "%*sResponse Batch Item @ %p\n", indent, "", (void *)value);
 
     if(value != NULL)
     {
-        printf("%*sOperation: ", indent + 2, "");
+        fprintf(dbgout, "%*sOperation: ", indent + 2, "");
         kmip_print_operation_enum(value->operation);
-        printf("\n");
+        fprintf(dbgout, "\n");
 
         kmip_print_byte_string(
             indent + 2,
             "Unique Batch Item ID",
             value->unique_batch_item_id);
 
-        printf("%*sResult Status: ", indent + 2, "");
+        fprintf(dbgout, "%*sResult Status: ", indent + 2, "");
         kmip_print_result_status_enum(value->result_status);
-        printf("\n");
+        fprintf(dbgout, "\n");
 
-        printf("%*sResult Reason: ", indent + 2, "");
+        fprintf(dbgout, "%*sResult Reason: ", indent + 2, "");
         kmip_print_result_reason_enum(value->result_reason);
-        printf("\n");
+        fprintf(dbgout, "\n");
 
         kmip_print_text_string(indent + 2, "Result Message", value->result_message);
         kmip_print_byte_string(
@@ -4499,15 +4524,15 @@ kmip_print_response_batch_item(int indent, ResponseBatchItem *value)
 void
 kmip_print_request_header(int indent, RequestHeader *value)
 {
-    printf("%*sRequest Header @ %p\n", indent, "", (void *)value);
+    fprintf(dbgout, "%*sRequest Header @ %p\n", indent, "", (void *)value);
 
     if(value != NULL)
     {
         kmip_print_protocol_version(indent + 2, value->protocol_version);
 
-        printf("%*sMaximum Response Size: ", indent + 2, "");
+        fprintf(dbgout, "%*sMaximum Response Size: ", indent + 2, "");
         kmip_print_integer(value->maximum_response_size);
-        printf("\n");
+        fprintf(dbgout, "\n");
 
         kmip_print_text_string(
             indent + 2,
@@ -4517,13 +4542,13 @@ kmip_print_request_header(int indent, RequestHeader *value)
             indent + 2,
             "Server Correlation Value",
             value->server_correlation_value);
-        printf("%*sAsynchronous Indicator: ", indent + 2, "");
+        fprintf(dbgout, "%*sAsynchronous Indicator: ", indent + 2, "");
         kmip_print_bool(value->asynchronous_indicator);
-        printf("\n");
-        printf("%*sAttestation Capable Indicator: ", indent + 2, "");
+        fprintf(dbgout, "\n");
+        fprintf(dbgout, "%*sAttestation Capable Indicator: ", indent + 2, "");
         kmip_print_bool(value->attestation_capable_indicator);
-        printf("\n");
-        printf(
+        fprintf(dbgout, "\n");
+        fprintf(dbgout, 
             "%*sAttestation Types: %zu\n",
             indent + 2,
             "",
@@ -4531,35 +4556,35 @@ kmip_print_request_header(int indent, RequestHeader *value)
         for(size_t i = 0; i < value->attestation_type_count; i++)
         {
             /* TODO (ph) Add enum value -> string functionality. */
-            printf("%*sAttestation Type: %s\n", indent + 4, "", "???");
+            fprintf(dbgout, "%*sAttestation Type: %s\n", indent + 4, "", "???");
         }
         kmip_print_authentication(indent + 2, value->authentication);
-        printf("%*sBatch Error Continuation Option: ", indent + 2, "");
+        fprintf(dbgout, "%*sBatch Error Continuation Option: ", indent + 2, "");
         kmip_print_batch_error_continuation_option(
             value->batch_error_continuation_option);
-        printf("\n");
-        printf("%*sBatch Order Option: ", indent + 2, "");
+        fprintf(dbgout, "\n");
+        fprintf(dbgout, "%*sBatch Order Option: ", indent + 2, "");
         kmip_print_bool(value->batch_order_option);
-        printf("\n");
-        printf("%*sTime Stamp: %lu\n", indent + 2, "", value->time_stamp);
-        printf("%*sBatch Count: %d\n", indent + 2, "", value->batch_count);
+        fprintf(dbgout, "\n");
+        fprintf(dbgout, "%*sTime Stamp: %lu\n", indent + 2, "", value->time_stamp);
+        fprintf(dbgout, "%*sBatch Count: %d\n", indent + 2, "", value->batch_count);
     }
 }
 
 void
 kmip_print_response_header(int indent, ResponseHeader *value)
 {
-    printf("%*sResponse Header @ %p\n", indent, "", (void *)value);
+    fprintf(dbgout, "%*sResponse Header @ %p\n", indent, "", (void *)value);
 
     if(value != NULL)
     {
         kmip_print_protocol_version(indent + 2, value->protocol_version);
-        printf("%*sTime Stamp: %lu\n", indent + 2, "", value->time_stamp);
+        fprintf(dbgout, "%*sTime Stamp: %lu\n", indent + 2, "", value->time_stamp);
         kmip_print_nonce(indent + 2, value->nonce);
 
         kmip_print_byte_string(indent + 2, "Server Hashed Password", value->server_hashed_password);
 
-        printf(
+        fprintf(dbgout, 
             "%*sAttestation Types: %zu\n",
             indent + 2,
             "",
@@ -4567,7 +4592,7 @@ kmip_print_response_header(int indent, ResponseHeader *value)
         for(size_t i = 0; i < value->attestation_type_count; i++)
         {
             /* TODO (ph) Add enum value -> string functionality. */
-            printf("%*sAttestation Type: %s\n", indent + 4, "", "???");
+            fprintf(dbgout, "%*sAttestation Type: %s\n", indent + 4, "", "???");
         }
         kmip_print_text_string(
             indent + 2,
@@ -4577,19 +4602,20 @@ kmip_print_response_header(int indent, ResponseHeader *value)
             indent + 2,
             "Server Correlation Value",
             value->server_correlation_value);
-        printf("%*sBatch Count: %d\n", indent + 2, "", value->batch_count);
+        fprintf(dbgout, "%*sBatch Count: %d\n", indent + 2, "", value->batch_count);
     }
 }
 
 void
 kmip_print_request_message(RequestMessage *value)
 {
-    printf("Request Message @ %p\n", (void *)value);
+    fprintf(dbgout, "\n");
+    fprintf(dbgout, "Request Message @ %p\n", (void *)value);
 
     if(value != NULL)
     {
         kmip_print_request_header(2, value->request_header);
-        printf("%*sBatch Items: %zu\n", 2, "", value->batch_count);
+        fprintf(dbgout, "%*sBatch Items: %zu\n", 2, "", value->batch_count);
 
         for(size_t i = 0; i < value->batch_count; i++)
         {
@@ -4603,12 +4629,13 @@ kmip_print_request_message(RequestMessage *value)
 void
 kmip_print_response_message(ResponseMessage *value)
 {
-    printf("Response Message @ %p\n", (void *)value);
+    fprintf(dbgout, "\n");
+    fprintf(dbgout, "Response Message @ %p\n", (void *)value);
 
     if(value != NULL)
     {
         kmip_print_response_header(2, value->response_header);
-        printf("  Batch Items: %zu\n", value->batch_count);
+        fprintf(dbgout, "  Batch Items: %zu\n", value->batch_count);
 
         for(size_t i = 0; i < value->batch_count; i++)
         {

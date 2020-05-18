@@ -1,0 +1,2 @@
+-a 127.0.0.1 -p 5696 -c /home/vagrant/kmip-tutorial/certs/client_certificate_jane_doe.pem -k /home/vagrant/kmip-tutorial/certs/client_key_jane_doe.pem -r /home/vagrant/kmip-tutorial/certs/server_certificate.pem -u JaneDoe -s aPassword -i 10
+

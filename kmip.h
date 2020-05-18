@@ -60,6 +60,18 @@ typedef double real64;
 #define KMIP_INVALID_FIELD           (-20)
 
 /*
+Debugging
+*/
+
+#define KMIP_DEBUG_OFF               0x00000000
+#define KMIP_DEBUG_REQUEST           0x00000001
+#define KMIP_DEBUG_RESPONSE          0x00000002
+
+extern uint32_t kmip_debug_flags;
+
+void kmip_debug(uint32_t flags, FILE *dest);
+
+/*
 Enumerations
 */
 

@@ -37,15 +37,16 @@ void usage(const char *program)
 {
     fprintf(stderr, "Usage: %s [flag value | flag] ...\n\n", program);
     fprintf(stderr, "Flags:\n");
-    fprintf(stderr, "-a addr : the IP address of the KMIP server\n");
-    fprintf(stderr, "-c path : path to client certificate file\n");
-    fprintf(stderr, "-h      : print this help info\n");
-    fprintf(stderr, "-i id   : the ID of the symmetric key to retrieve\n");
-    fprintf(stderr, "-k path : path to client key file\n");
-    fprintf(stderr, "-p port : the port number of the KMIP server\n");
-    fprintf(stderr, "-r path : path to CA certificate file\n");
-    fprintf(stderr, "-s pass : the password for KMIP server authentication\n");
-    fprintf(stderr, "-u user : the username for KMIP server authentication\n");
+    fprintf(stderr, "-a address  : the IP address of the KMIP server\n");
+    fprintf(stderr, "-c path     : path to client certificate file\n");
+    fprintf(stderr, "-h          : print this help info\n");
+    fprintf(stderr, "-i id       : the ID of the symmetric key to retrieve\n");
+    fprintf(stderr, "-k path     : path to client key file\n");
+    fprintf(stderr, "-p port     : the port number of the KMIP server\n");
+    fprintf(stderr, "-r path     : path to CA certificate file\n");
+    fprintf(stderr, "-s password : the password for KMIP server authentication\n");
+    fprintf(stderr, "-u user     : the user name for KMIP server authentication\n");
+    fprintf(stderr, "-v version  : KMIP Version protocol\n");
 }
 
 
@@ -114,7 +115,8 @@ int use_mid_level_api(char *server_address,
                       char *ca_certificate,
                       char *username,
                       char *password,
-                      char *id)
+                      char *id,
+                      enum kmip_version version)
 {
 
     SSL_CTX *ctx = NULL;
@@ -178,7 +180,7 @@ int use_mid_level_api(char *server_address,
     kmip_context.realloc_func = &_realloc;
     kmip_context.free_func = &_free;
 
-    kmip_init(&kmip_context, NULL, 0, KMIP_1_0);
+    kmip_init(&kmip_context, NULL, 0, version);
 
     TextString u = {0};
     u.value = username;
@@ -256,25 +258,29 @@ int
 main(int argc, char **argv)
 {
 
-    char *server_address = NULL;
-    char *server_port = NULL;
+    char *server_address = "127.0.0.1";
+    char *server_port = "5696";
     char *client_certificate = NULL;
     char *client_key = NULL;
     char *ca_certificate = NULL;
     char *username = NULL;
     char *password = NULL;
     char *id = NULL;
+    enum kmip_version version = KMIP_1_0;
     int c;
     int error = 0;
     int result = EXIT_SUCCESS;
 
-    while ((c = getopt(argc, argv, "a:c:hi:k:p:r:s:u:")) != -1) {
+    while ((c = getopt(argc, argv, "a:c:dhi:k:p:r:s:u:v:")) != -1) {
         switch (c) {
         case 'a':
             server_address = optarg;
             break;
         case 'c':
             client_certificate = optarg;
+            break;
+        case 'd':
+            kmip_debug(KMIP_DEBUG_REQUEST | KMIP_DEBUG_RESPONSE, NULL);
             break;
         case 'h':
             error = 1;
@@ -297,6 +303,24 @@ main(int argc, char **argv)
         case 'u':
             username = optarg;
             break;
+        case 'v':
+            if (strcmp(optarg, "1.0") == 0) {
+                version = KMIP_1_0;
+            } else if (strcmp(optarg, "1.1") == 0) {
+                version = KMIP_1_1;
+            } else if (strcmp(optarg, "1.2") == 0) {
+                version = KMIP_1_2;
+            } else if (strcmp(optarg, "1.3") == 0) {
+                version = KMIP_1_3;
+            } else if (strcmp(optarg, "1.4") == 0) {
+                version = KMIP_1_4;
+            } else if (strcmp(optarg, "2.0") == 0) {
+                version = KMIP_2_0;
+            } else {
+                fprintf(stderr, "Invalid KMIP protocol: '%s'\n", optarg);
+                error = 1;
+            }
+            break;
         default:
             fprintf(stderr, "Invalid option: '-%c'\n", optopt);
             error = 1;
@@ -311,7 +335,7 @@ main(int argc, char **argv)
                                   client_certificate, client_key,
                                   ca_certificate,
                                   username, password,
-                                  id);
+                                  id, version);
        result = (error < 0) ? EXIT_FAILURE : EXIT_SUCCESS;
     }
 
