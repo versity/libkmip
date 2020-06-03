@@ -9948,7 +9948,7 @@ kmip_encode_request_header(KMIP *ctx, const RequestHeader *value)
     CHECK_RESULT(ctx, result);
 
     /* HERE (ph) Stopped working here after bug with 0 vs KMIP_UNSET */
-    if(value->maximum_response_size != KMIP_UNSET)
+    if((value->maximum_response_size != 0) && (value->maximum_response_size != KMIP_UNSET))
     {
         result = kmip_encode_integer(ctx, KMIP_TAG_MAXIMUM_RESPONSE_SIZE, value->maximum_response_size);
         CHECK_RESULT(ctx, result);

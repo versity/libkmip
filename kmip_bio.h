@@ -21,7 +21,7 @@ int kmip_bio_get_symmetric_key(BIO *, char *, int, char **, int *);
 int kmip_bio_destroy_symmetric_key(BIO *, char *, int);
 
 int kmip_bio_create_symmetric_key_with_context(KMIP *, BIO *, TemplateAttribute *, char **, int *);
-int kmip_bio_get_symmetric_key_with_context(KMIP *, BIO *, char *, int, char **, int *);
+int kmip_bio_get_symmetric_key_with_context(KMIP *, BIO *, char *, int, char **, int *, bool32);
 int kmip_bio_destroy_symmetric_key_with_context(KMIP *, BIO *, char *, int);
 
 int kmip_bio_send_request_encoding(KMIP *, BIO *, char *, int, char **, int *);

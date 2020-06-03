@@ -896,7 +896,8 @@ int kmip_bio_create_symmetric_key_with_context(KMIP *ctx, BIO *bio,
 
 int kmip_bio_get_symmetric_key_with_context(KMIP *ctx, BIO *bio,
                                             char *uuid, int uuid_size,
-                                            char **key, int *key_size)
+                                            char **key, int *key_size,
+                                            bool32 time_stamp)
 {
     if(ctx == NULL || bio == NULL || uuid == NULL || uuid_size <= 0 || key == NULL || key_size == NULL)
     {
@@ -926,9 +927,19 @@ int kmip_bio_get_symmetric_key_with_context(KMIP *ctx, BIO *bio,
     kmip_init_request_header(&rh);
     
     rh.protocol_version = &pv;
-    rh.maximum_response_size = ctx->max_message_size;
-    rh.time_stamp = time(NULL);
+    rh.time_stamp = (time_stamp == KMIP_TRUE) ? time(NULL) : 0;
     rh.batch_count = 1;
+
+    // - The original code has the following statement:
+    //
+    //       rh.maximum_response_size = ctx->max_message_size;
+    //
+    //   The value in rh.maximum_response_size is used to generate the
+    //   optional maximum response size field in the request message.
+    //   Setting it to a value of 0 prevents that field from being added.
+    //   However, that field in the context is used to read the response
+    //   message so it cannot be zero.  Not setting the request header
+    //   works until a better solution is developed.
     
     TextString id = {0};
     id.value = uuid;
