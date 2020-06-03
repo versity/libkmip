@@ -182,35 +182,40 @@ int use_mid_level_api(char *server_address,
 
     kmip_init(&kmip_context, NULL, 0, version);
 
-    TextString u = {0};
-    u.value = username;
-    u.size = kmip_strnlen_s(username, 50);
+    if (username != NULL)
+    {
 
-    TextString p = {0};
-    p.value = password;
-    p.size = kmip_strnlen_s(password, 50);
+        TextString u = {0};
+        u.value = username;
+        u.size = kmip_strnlen_s(username, 50);
 
-    UsernamePasswordCredential upc = {0};
-    upc.username = &u;
-    upc.password = &p;
+        TextString p = {0};
+        p.value = password;
+        p.size = kmip_strnlen_s(password, 50);
 
-    Credential credential = {0};
-    credential.credential_type = KMIP_CRED_USERNAME_AND_PASSWORD;
-    credential.credential_value = &upc;
+        UsernamePasswordCredential upc = {0};
+        upc.username = &u;
+        upc.password = &p;
 
-    int result = kmip_add_credential(&kmip_context, &credential);
+        Credential credential = {0};
+        credential.credential_type = KMIP_CRED_USERNAME_AND_PASSWORD;
+        credential.credential_value = &upc;
 
-    if (result != KMIP_OK) {
-        fprintf(stderr, "Failed to add credential to the KMIP context.\n");
-        BIO_free_all(bio);
-        SSL_CTX_free(ctx);
-        kmip_destroy(&kmip_context);
-        return result;
+        int result = kmip_add_credential(&kmip_context, &credential);
+
+        if (result != KMIP_OK) {
+            fprintf(stderr, "Failed to add credential to the KMIP context.\n");
+            BIO_free_all(bio);
+            SSL_CTX_free(ctx);
+            kmip_destroy(&kmip_context);
+            return result;
+        }
+
     }
 
-    result = kmip_bio_get_symmetric_key_with_context(&kmip_context, bio,
-                                                     id, id_size,
-                                                     &key, &key_size);
+    int result = kmip_bio_get_symmetric_key_with_context(&kmip_context, bio,
+                                                         id, id_size,
+                                                         &key, &key_size);
 
     BIO_free_all(bio);
     SSL_CTX_free(ctx);
