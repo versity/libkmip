@@ -896,8 +896,7 @@ int kmip_bio_create_symmetric_key_with_context(KMIP *ctx, BIO *bio,
 
 int kmip_bio_get_symmetric_key_with_context(KMIP *ctx, BIO *bio,
                                             char *uuid, int uuid_size,
-                                            char **key, int *key_size,
-                                            bool32 time_stamp)
+                                            char **key, int *key_size)
 {
     if(ctx == NULL || bio == NULL || uuid == NULL || uuid_size <= 0 || key == NULL || key_size == NULL)
     {
@@ -927,7 +926,7 @@ int kmip_bio_get_symmetric_key_with_context(KMIP *ctx, BIO *bio,
     kmip_init_request_header(&rh);
     
     rh.protocol_version = &pv;
-    rh.time_stamp = (time_stamp == KMIP_TRUE) ? time(NULL) : 0;
+    rh.time_stamp = (ctx->time_stamp_field == KMIP_TRUE) ? time(NULL) : 0;
     rh.batch_count = 1;
 
     // - The original code has the following statement:

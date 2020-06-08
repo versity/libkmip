@@ -1219,6 +1219,7 @@ kmip_init(KMIP *ctx, void *buffer, size_t buffer_size, enum kmip_version v)
     if(ctx->memcpy_func == NULL)
         ctx->memcpy_func = &kmip_memcpy;
 
+    ctx->time_stamp_field = KMIP_FALSE;
     ctx->max_message_size = 8192;
     ctx->error_message_size = 200;
     ctx->error_message = NULL;

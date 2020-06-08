@@ -215,8 +215,7 @@ int use_mid_level_api(char *server_address,
 
     int result = kmip_bio_get_symmetric_key_with_context(&kmip_context, bio,
                                                          id, id_size,
-                                                         &key, &key_size,
-                                                         KMIP_FALSE);
+                                                         &key, &key_size);
 
     BIO_free_all(bio);
     SSL_CTX_free(ctx);

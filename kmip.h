@@ -747,6 +747,7 @@ typedef struct kmip
     /* KMIP message settings */
     enum kmip_version version;
     int max_message_size;
+    bool32 time_stamp_field;
     LinkedList *credential_list;
     
     /* Error handling information */
