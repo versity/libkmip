@@ -15,6 +15,13 @@
 #include "kmip_memset.h"
 
 
+void kmip_debug(uint32_t flags, FILE *dest)
+{
+    (void)flags;
+    (void)dest;
+}
+
+
 size_t
 kmip_strnlen_s(const char *str, size_t strsz)
 {
