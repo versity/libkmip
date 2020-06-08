@@ -187,11 +187,11 @@ int use_mid_level_api(char *server_address,
 
         TextString u = {0};
         u.value = username;
-        u.size = kmip_strnlen_s(username, 50);
+        u.size = kmip_strnlen_s(username, 64);
 
         TextString p = {0};
         p.value = password;
-        p.size = kmip_strnlen_s(password, 50);
+        p.size = kmip_strnlen_s(password, 64);
 
         UsernamePasswordCredential upc = {0};
         upc.username = &u;

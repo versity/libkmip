@@ -4,7 +4,7 @@ Changelog
 
 .. _v0.2.1: https://github.com/versity/libkmip.git
 
-0.2.1 - May 1, 2020
+0.2.1 - June 8, 2020
 ~~~~~~~~~~~~~~~~~~~~~~
 
 * Support Versity Development
@@ -14,6 +14,12 @@ Changelog
   - Additional program, kmip-get, for use at customer sites to
     verify that the 'libkmip' library is compatible with their
     KMIP server.
+  - Changes to support commercial KMIP servers
+    + Support unique identifiers up to 256 bytes.
+    + Remove automatic addition of request header fields:
+      - Time stamp
+      - Maximum Response Size
+    + Supplying empty credentials if a user name is not specfied.
   - Changes to support CentOS 7
     + Support for OpenSSL 1.0
     + Issues with gcc not properly handling C11 {0} initializer.
